@@ -1,0 +1,4 @@
+# Standalone Arc Testnet transaction signing for scripts/arc_testnet_transfer.py.
+# This is deliberately separate from the Safe4 service dependencies until the
+# D2 settlement interface is designed.
+eth-account>=0.13,<1.0

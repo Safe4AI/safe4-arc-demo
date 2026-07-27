@@ -1,0 +1,13 @@
+services:
+  safe4:
+    build:
+      context: .
+    environment:
+      PORT: 8090
+      PAYMENT_FIREWALL_ENV: development
+      PAYMENT_FIREWALL_ADMIN_SECRET: demo-local-admin-only
+      PAYMENT_FIREWALL_RECEIPT_SECRET: demo-local-receipt-only
+      PAYMENT_FIREWALL_DEMO_ACCESS_TOKEN: safe4-local-demo
+      PAYMENT_FIREWALL_PAY_TO: "0x530271DA8CC4e44375f22ad9632bC61A55382f88"
+    ports:
+      - "8090:8090"
