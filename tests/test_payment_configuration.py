@@ -8,6 +8,7 @@ import json
 import pytest
 
 from app import main
+from app.api.policy import PolicyDocumentModel
 
 
 def _decode_provider_payload(token: str) -> dict[str, object]:
@@ -22,6 +23,13 @@ def test_arc_testnet_is_the_default_x402_network() -> None:
         main.X402_NETWORK_RECIPIENT_ADDRESSES["arc-testnet"]
         == main.PAY_TO_ADDRESS
     )
+
+
+def test_embedded_default_policy_validates_for_future_activation() -> None:
+    policy = PolicyDocumentModel.model_validate(main.DEFAULT_POLICY_DOCUMENT)
+    assert policy.version == main.POLICY_VERSION
+    assert policy.controls.infrastructure_identity_policy is not None
+    assert policy.controls.infrastructure_identity_policy.trusted_provider_names == []
 
 
 def test_provider_receipt_builder_never_invents_settlement_proof() -> None:

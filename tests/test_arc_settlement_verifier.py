@@ -6,8 +6,10 @@ import unittest
 from scripts.verify_arc_settlement import (
     ArcSettlementError,
     TRANSFER_TOPIC,
+    USER_OPERATION_EVENT_TOPIC,
     address_topic,
     encode_transfer,
+    verify_circle_agent_wallet_payloads,
     verify_settlement_payloads,
 )
 
@@ -17,6 +19,9 @@ USDC = "0x3600000000000000000000000000000000000000"
 SENDER = "0x1111111111111111111111111111111111111111"
 RECIPIENT = "0x2222222222222222222222222222222222222222"
 AMOUNT_UNITS = 10_000
+ENTRYPOINT = "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
+NATIVE_USDC = "0xfffffffffffffffffffffffffffffffffffffffe"
+NATIVE_AMOUNT_UNITS = 10_000_000_000_000_000
 
 
 def valid_payloads() -> tuple[dict[str, object], dict[str, object]]:
@@ -100,6 +105,79 @@ class ArcSettlementVerifierTests(unittest.TestCase):
             self.verify(None, receipt)
         with self.assertRaisesRegex(ArcSettlementError, "receipt not found"):
             self.verify(transaction, None)
+
+
+class CircleAgentWalletVerifierTests(unittest.TestCase):
+    def payloads(self) -> tuple[dict[str, object], dict[str, object]]:
+        transaction: dict[str, object] = {
+            "hash": TX_HASH,
+            "from": "0x3333333333333333333333333333333333333333",
+            "to": ENTRYPOINT,
+            "value": "0x0",
+            "input": "0x1234",
+        }
+        receipt: dict[str, object] = {
+            "transactionHash": TX_HASH,
+            "status": "0x1",
+            "blockNumber": "0x2b",
+            "logs": [
+                {
+                    "address": NATIVE_USDC,
+                    "topics": [
+                        TRANSFER_TOPIC,
+                        address_topic(SENDER),
+                        address_topic(RECIPIENT),
+                    ],
+                    "data": hex(NATIVE_AMOUNT_UNITS),
+                },
+                {
+                    "address": ENTRYPOINT,
+                    "topics": [
+                        USER_OPERATION_EVENT_TOPIC,
+                        "0x" + ("4" * 64),
+                        address_topic(SENDER),
+                    ],
+                    "data": "0x" + ("0" * 64) + f"{1:064x}" + ("0" * 128),
+                },
+            ],
+        }
+        return transaction, receipt
+
+    def verify(
+        self,
+        transaction: dict[str, object] | None,
+        receipt: dict[str, object] | None,
+    ) -> int:
+        return verify_circle_agent_wallet_payloads(
+            transaction,
+            receipt,
+            transaction_hash=TX_HASH,
+            entrypoint_address=ENTRYPOINT,
+            native_usdc_address=NATIVE_USDC,
+            sender=SENDER,
+            recipient=RECIPIENT,
+            native_amount_units=NATIVE_AMOUNT_UNITS,
+        )
+
+    def test_accepts_exact_successful_agent_wallet_transfer(self) -> None:
+        transaction, receipt = self.payloads()
+        self.assertEqual(self.verify(transaction, receipt), 43)
+
+    def test_rejects_wrong_recipient_or_amount(self) -> None:
+        transaction, receipt = self.payloads()
+        receipt["logs"][0]["topics"][2] = address_topic(  # type: ignore[index]
+            "0x4444444444444444444444444444444444444444"
+        )
+        with self.assertRaisesRegex(ArcSettlementError, "native USDC"):
+            self.verify(transaction, receipt)
+
+    def test_rejects_failed_user_operation(self) -> None:
+        transaction, receipt = self.payloads()
+        receipt["logs"][1]["data"] = (  # type: ignore[index]
+            "0x" + ("0" * 64) + f"{0:064x}" + ("0" * 128)
+        )
+        with self.assertRaisesRegex(ArcSettlementError, "successful ERC-4337"):
+            self.verify(transaction, receipt)
 
 
 if __name__ == "__main__":

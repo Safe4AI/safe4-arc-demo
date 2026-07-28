@@ -13,7 +13,7 @@ As of 28 July 2026:
 
 - the FastAPI payment-firewall service and its policy, approval, receipt, audit,
   AP2, x402, MCP-governance, and anomaly-control paths are implemented
-- the Python 3.13 regression gate passes with 286 tests
+- the Python 3.13 regression gate passes with 293 tests
 - a real `0.01 USDC` transfer has settled on Arc Testnet and is independently
   verifiable by RPC
 - the one-command golden path runs Safe4's real `/pay` authorization flow,
@@ -23,8 +23,8 @@ As of 28 July 2026:
   same-amount, same-category, same-counterparty purchase
 - x402 challenges advertise Arc Testnet first and map its recipient to the
   explicitly configured payment destination
-- the optional Circle Agent Stack adapter is coded to attempt an Arc Testnet
-  Agent Wallet transfer only after ALLOWED; authenticated validation is pending
+- an authenticated Circle Agent Wallet settled `0.01` testnet USDC after
+  Safe4 returned ALLOWED; the ERC-4337 receipt is RPC-verified
 
 The midpoint milestone was 27 July 2026. Integration runs 27–31 July,
 proof runs 1–8 August, and final submission is due 9 August 2026; the exact
@@ -55,12 +55,21 @@ SAFE4_DEMO_MODE=circle-live bash scripts/demo_golden_path.sh
 
 That mode requires Circle CLI plus an authenticated Arc Testnet Agent Wallet
 session. Circle's email OTP and Terms acceptance remain human-controlled. The
-adapter is coded to reach the transfer command only after ALLOWED; a successful
-authenticated Circle run is not yet claimed.
+adapter reaches the transfer command only after ALLOWED.
+
+To re-verify the fresh Agent Wallet transaction without broadcasting again:
+
+```bash
+SAFE4_DEMO_MODE=circle-rpc-replay \
+SETTLEMENT_TX=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c \
+SETTLEMENT_FROM=0x3985a31e4e42a31e437c1099306decbe2f08da4d \
+bash scripts/demo_golden_path.sh
+```
 
 - [Editable 10-slide deck](artifacts/Safe4_Encode_Arc_Deck.pptx)
 - [Video script, run sheet, and rehearsal checklist](docs/hackathon/VIDEO_PACKAGE.md)
 - [Claim ledger](docs/hackathon/CLAIM_LEDGER.md)
+- [Arc challenges overcome and core-team suggestions](docs/hackathon/ARC_IMPLEMENTATION_CHALLENGES.md)
 
 ## Verified Arc transaction
 
@@ -71,6 +80,7 @@ authenticated Circle run is not yet claimed.
 | USDC contract | `0x3600000000000000000000000000000000000000` |
 | Amount | `0.01 USDC` |
 | Transaction | [`0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a`](https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a) |
+| Fresh Circle Agent Wallet transaction | [`0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c`](https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c) |
 
 The repository includes an RPC verifier that checks the chain, token contract,
 sender, recipient, exact calldata and amount, successful receipt, and matching
@@ -161,6 +171,7 @@ The shared deployment must supply these values through Railway variables:
 - `PAYMENT_FIREWALL_PAY_TO=<Arc Testnet recipient>`
 - `PAYMENT_FIREWALL_X402_SUPPORTED_NETWORKS=arc-testnet`
 - `PAYMENT_FIREWALL_X402_NETWORK_RECIPIENTS=arc-testnet:<same recipient>`
+- `PAYMENT_FIREWALL_PHASE3_X402_ADVANCED_ENABLED=true`
 - `PAYMENT_FIREWALL_OAUTH_ISSUER=https://<generated Railway domain>`
 
 Do not commit the generated secret values. A public deployment is not claimed

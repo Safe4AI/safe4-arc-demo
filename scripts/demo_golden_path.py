@@ -25,6 +25,7 @@ from scripts.verify_arc_settlement import (
     ArcSettlementError,
     parse_hex_int,
     rpc,
+    verify_circle_agent_wallet_payloads,
     verify_settlement_payloads,
 )
 
@@ -100,6 +101,75 @@ def _verify_arc_transaction(transaction_hash: str) -> dict[str, Any]:
     }
 
 
+def _verify_circle_agent_wallet_transaction(
+    transaction_hash: str,
+) -> dict[str, Any]:
+    rpc_url = _required_env("RPC_URL")
+    chain_id = int(_required_env("CHAIN_ID"))
+    usdc_address = _required_env("USDC_ADDRESS")
+    sender = _required_env("SETTLEMENT_FROM")
+    recipient = _required_env("SETTLEMENT_TO")
+    amount_units = int(_required_env("SETTLEMENT_AMOUNT_UNITS"))
+    entrypoint_address = _required_env("ARC_ENTRYPOINT_ADDRESS")
+    native_usdc_address = _required_env("ARC_NATIVE_USDC_ADDRESS")
+    native_usdc_decimals = int(_required_env("ARC_NATIVE_USDC_DECIMALS"))
+    usdc_decimals = int(os.getenv("USDC_DECIMALS", "6"))
+    if native_usdc_decimals < usdc_decimals:
+        raise RuntimeError("ARC_NATIVE_USDC_DECIMALS cannot be less than USDC_DECIMALS")
+    native_amount_units = amount_units * (
+        10 ** (native_usdc_decimals - usdc_decimals)
+    )
+
+    with httpx.Client(timeout=15.0) as client:
+        actual_chain_id = parse_hex_int(
+            rpc(client, rpc_url, "eth_chainId", []),
+            label="chain ID",
+        )
+        if actual_chain_id != chain_id:
+            raise ArcSettlementError(
+                f"wrong chain: expected {chain_id}, RPC returned {actual_chain_id}"
+            )
+        transaction = rpc(
+            client,
+            rpc_url,
+            "eth_getTransactionByHash",
+            [transaction_hash],
+        )
+        receipt = rpc(
+            client,
+            rpc_url,
+            "eth_getTransactionReceipt",
+            [transaction_hash],
+        )
+
+    block_number = verify_circle_agent_wallet_payloads(
+        transaction,
+        receipt,
+        transaction_hash=transaction_hash,
+        entrypoint_address=entrypoint_address,
+        native_usdc_address=native_usdc_address,
+        sender=sender,
+        recipient=recipient,
+        native_amount_units=native_amount_units,
+    )
+    return {
+        "transaction_hash": transaction_hash,
+        "chain_id": chain_id,
+        "chain": ARC_CHAIN,
+        "token": usdc_address,
+        "sender": sender,
+        "recipient": recipient,
+        "amount_units": amount_units,
+        "amount_usdc": f"{amount_units / (10 ** usdc_decimals):.6f}",
+        "block_number": block_number,
+        "explorer_url": f"{ARC_EXPLORER_TX}{transaction_hash}",
+        "rpc_verified": True,
+        "execution_path": "ERC_4337_AGENT_WALLET",
+        "entrypoint": entrypoint_address,
+        "settlement_representation": "ARC_NATIVE_USDC_EVENT",
+    }
+
+
 class SettlementExecutor:
     def __init__(self, mode: str) -> None:
         self.mode = mode
@@ -114,8 +184,18 @@ class SettlementExecutor:
                 "mode": "RPC_VERIFIED_REPLAY",
                 "broadcast": "EXISTING_CHAIN_EVIDENCE",
             }
+        if self.mode == "circle-rpc-replay":
+            transaction_hash = _required_env("SETTLEMENT_TX")
+            evidence = _verify_circle_agent_wallet_transaction(transaction_hash)
+            return evidence | {
+                "mode": "CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY",
+                "broadcast": "EXISTING_CHAIN_EVIDENCE",
+            }
         if self.mode != "circle-live":
-            raise RuntimeError("SAFE4_DEMO_MODE must be rpc-replay or circle-live")
+            raise RuntimeError(
+                "SAFE4_DEMO_MODE must be rpc-replay, "
+                "circle-rpc-replay, or circle-live"
+            )
 
         circle = shutil.which("circle")
         if circle is None:
@@ -156,7 +236,7 @@ class SettlementExecutor:
                 "Circle transfer completed without a transaction hash in JSON output"
             )
         transaction_hash = match.group(0)
-        evidence = _verify_arc_transaction(transaction_hash)
+        evidence = _verify_circle_agent_wallet_transaction(transaction_hash)
         return evidence | {
             "mode": "CIRCLE_AGENT_WALLET_LIVE",
             "broadcast": "SUBMITTED_AFTER_SAFE4_ALLOW",
@@ -291,11 +371,11 @@ def run() -> int:
         print("SAFE4_GOLDEN_PATH_START")
         print(
             "MODE="
-            + (
-                "RPC_VERIFIED_REPLAY"
-                if mode == "rpc-replay"
-                else "CIRCLE_AGENT_WALLET_LIVE"
-            )
+            + {
+                "rpc-replay": "RPC_VERIFIED_REPLAY",
+                "circle-rpc-replay": "CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY",
+                "circle-live": "CIRCLE_AGENT_WALLET_LIVE",
+            }.get(mode, mode.upper())
         )
         print(
             "Circle Agent Stack execution boundary: "

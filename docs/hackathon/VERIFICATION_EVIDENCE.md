@@ -10,10 +10,10 @@ Command:
 python -m pytest -q
 ```
 
-Raw final line after the C8 wording/test update:
+Raw final line after the Circle Agent Wallet/ERC-4337 update:
 
 ```text
-286 passed, 7 warnings
+293 passed, 7 warnings in 114.04s (0:01:54)
 ```
 
 ## Fast gate
@@ -27,7 +27,7 @@ python -m pytest -q -m "not slow"
 Raw final line after the C8 wording/test update:
 
 ```text
-60 passed, 226 deselected, 7 warnings
+67 passed, 226 deselected, 7 warnings in 1.64s
 ```
 
 ## Documentation check
@@ -51,3 +51,37 @@ No issues found.
 The final staged-file audit must report zero secrets and zero forbidden
 artifacts before commit. Record the exact public commit and CI run in this file
 after push.
+
+## Fresh Circle Agent Wallet settlement
+
+Observed after Safe4 returned `ALLOWED` on 28 July 2026:
+
+```text
+transaction_hash=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
+chain_id=5042002
+block_number=54014886
+sender=0x3985a31e4e42a31e437c1099306decbe2f08da4d
+recipient=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+amount=0.010000 USDC
+execution_path=ERC_4337_AGENT_WALLET
+rpc_verified=true
+```
+
+Explorer:
+<https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c>
+
+The initial live verification failed closed because the existing verifier
+expected a direct EOA-to-ERC-20 transaction. The transfer had succeeded through
+Circle's ERC-4337 EntryPoint. The corrected verifier requires both the
+successful wallet `UserOperationEvent` and the exact recipient/amount transfer
+event. The no-broadcast `circle-rpc-replay` run then finished with:
+
+```text
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+settlement=RPC_VERIFIED
+VERDICT=DENIED
+reason_code=PURCHASE_PURPOSE_MISMATCH
+DENIED_DEMO_EXECUTOR_NOT_INVOKED=PASS
+SAFE4_GOLDEN_PATH_OK
+```

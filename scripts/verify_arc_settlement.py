@@ -12,6 +12,9 @@ import httpx
 
 TRANSFER_SELECTOR = "a9059cbb"
 TRANSFER_TOPIC = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+USER_OPERATION_EVENT_TOPIC = (
+    "0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f"
+)
 ADDRESS_PATTERN = re.compile(r"^0x[0-9a-fA-F]{40}$")
 TX_HASH_PATTERN = re.compile(r"^0x[0-9a-fA-F]{64}$")
 
@@ -132,6 +135,91 @@ def verify_settlement_payloads(
     if not matching_log:
         raise ArcSettlementError(
             "receipt has no matching USDC Transfer(sender, recipient, amount) event"
+        )
+
+    return parse_hex_int(receipt.get("blockNumber"), label="receipt block number")
+
+
+def verify_circle_agent_wallet_payloads(
+    transaction: dict[str, Any] | None,
+    receipt: dict[str, Any] | None,
+    *,
+    transaction_hash: str,
+    entrypoint_address: str,
+    native_usdc_address: str,
+    sender: str,
+    recipient: str,
+    native_amount_units: int,
+) -> int:
+    """Verify an ERC-4337 Agent Wallet transfer from its receipt evidence."""
+
+    expected_hash = validate_transaction_hash(transaction_hash)
+    expected_entrypoint = validate_address(
+        entrypoint_address,
+        label="ERC-4337 EntryPoint address",
+    )
+    expected_native_usdc = validate_address(
+        native_usdc_address,
+        label="Arc native USDC event address",
+    )
+    expected_sender = validate_address(sender, label="Agent Wallet sender")
+    expected_recipient = validate_address(recipient, label="recipient")
+    if native_amount_units <= 0:
+        raise ArcSettlementError("native_amount_units must be positive")
+
+    if transaction is None:
+        raise ArcSettlementError("transaction not found")
+    if receipt is None:
+        raise ArcSettlementError("transaction receipt not found")
+    if str(transaction.get("hash", "")).lower() != expected_hash:
+        raise ArcSettlementError("transaction hash does not match RPC payload")
+    if str(receipt.get("transactionHash", "")).lower() != expected_hash:
+        raise ArcSettlementError("receipt hash does not match expected transaction")
+    if parse_hex_int(receipt.get("status"), label="receipt status") != 1:
+        raise ArcSettlementError("transaction receipt status is not successful")
+    if str(transaction.get("to", "")).lower() != expected_entrypoint:
+        raise ArcSettlementError(
+            "Agent Wallet transaction target is not the configured ERC-4337 EntryPoint"
+        )
+    if parse_hex_int(transaction.get("value", "0x0"), label="transaction value") != 0:
+        raise ArcSettlementError("ERC-4337 settlement transaction must have zero value")
+
+    sender_topic = address_topic(expected_sender)
+    recipient_topic = address_topic(expected_recipient)
+    transfer_seen = False
+    successful_user_operation_seen = False
+    for entry in receipt.get("logs", []):
+        address = str(entry.get("address", "")).lower()
+        topics = [str(topic).lower() for topic in entry.get("topics", [])]
+        data = str(entry.get("data", "0x0")).lower()
+        if (
+            address == expected_native_usdc
+            and len(topics) >= 3
+            and topics[0] == TRANSFER_TOPIC
+            and topics[1] == sender_topic
+            and topics[2] == recipient_topic
+            and parse_hex_int(data, label="Arc native USDC Transfer amount")
+            == native_amount_units
+        ):
+            transfer_seen = True
+        if (
+            address == expected_entrypoint
+            and len(topics) >= 3
+            and topics[0] == USER_OPERATION_EVENT_TOPIC
+            and topics[2] == sender_topic
+            and len(data) >= 130
+            and parse_hex_int("0x" + data[66:130], label="UserOperation success") == 1
+        ):
+            successful_user_operation_seen = True
+
+    if not transfer_seen:
+        raise ArcSettlementError(
+            "receipt has no matching Arc native USDC "
+            "Transfer(Agent Wallet, recipient, amount) event"
+        )
+    if not successful_user_operation_seen:
+        raise ArcSettlementError(
+            "receipt has no successful ERC-4337 UserOperation for the Agent Wallet"
         )
 
     return parse_hex_int(receipt.get("blockNumber"), label="receipt block number")

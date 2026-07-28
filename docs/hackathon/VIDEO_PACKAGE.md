@@ -49,9 +49,9 @@ denied branch.
 Arc gives us a payment-native test environment and exact onchain USDC evidence.
 Circle Agent Stack gives agents wallet execution and native guardrails. Safe4
 does not replace those controls. Circle enforces the floor; Safe4 decides
-whether this payment should happen at all. The optional adapter is coded to
-attempt Circle execution only after ALLOWED; authenticated validation is
-pending.
+whether this payment should happen at all. After an ALLOWED decision, the
+authenticated Agent Wallet settled 0.01 testnet USDC on Arc. Safe4 then
+RPC-verified the ERC-4337 receipt, exact recipient, and amount.
 
 **2:45–2:55 — team and path**
 
@@ -82,7 +82,7 @@ Safe4 for the Circle Agent Marketplace.
 3. Open these tabs before recording:
    - deck in presentation mode;
    - terminal at repository root;
-   - [Arcscan transaction](https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a).
+   - [Fresh Circle Agent Wallet transaction](https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c).
 4. Increase terminal font until each stable marker remains readable at 1080p.
 5. Run `bash scripts/demo_golden_path.sh` once off-camera as a network preflight.
 6. Clear the terminal, start recording, then run the same command once.
@@ -95,16 +95,16 @@ Safe4 for the Circle Agent Marketplace.
 - [ ] Allowed and denied reasons fit on screen without horizontal scrolling.
 - [ ] Arcscan visibly says Testnet and the hash matches the terminal.
 - [ ] The script says the replay did not broadcast a fresh transfer.
-- [ ] Circle adapter is described as coded but unvalidated unless fresh evidence exists.
+- [ ] Circle Agent Wallet claim is limited to the verified Arc Testnet transfer.
 - [ ] Final take is between 2:40 and 2:55.
 - [ ] Export at 1080p; verify the final file with `ffprobe`.
 
 ## Backup evidence
 
 - Transaction:
-  `0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a`
+  `0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c`
 - Explorer:
-  <https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a>
+  <https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c>
 - Arc evidence document: `docs/ARC_TESTNET_EVIDENCE.md`
 - Committed demo transcript: `docs/hackathon/DEMO_TRANSCRIPT.txt`
 - Raw regression evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`

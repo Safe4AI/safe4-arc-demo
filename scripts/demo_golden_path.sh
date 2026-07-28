@@ -3,6 +3,18 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+declare -A caller_overrides=()
+override_names=(
+  SAFE4_DEMO_MODE RPC_URL CHAIN_ID USDC_ADDRESS USDC_DECIMALS
+  ARC_ENTRYPOINT_ADDRESS ARC_NATIVE_USDC_ADDRESS ARC_NATIVE_USDC_DECIMALS
+  SETTLEMENT_TX SETTLEMENT_FROM SETTLEMENT_TO SETTLEMENT_AMOUNT_UNITS
+)
+for name in "${override_names[@]}"; do
+  if [[ -v "$name" ]]; then
+    caller_overrides["$name"]="${!name}"
+  fi
+done
+
 if [ -f scripts/demo_golden_path.env ]; then
   set -a
   # Committed public Arc Testnet evidence; contains no credentials.
@@ -16,6 +28,10 @@ if [ -f shipline/verify.env ]; then
   . shipline/verify.env
   set +a
 fi
+
+for name in "${!caller_overrides[@]}"; do
+  export "$name=${caller_overrides[$name]}"
+done
 
 if [ -n "${PYTHON:-}" ]; then
   :

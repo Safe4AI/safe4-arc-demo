@@ -132,7 +132,7 @@ class PolicyInfrastructureIdentityPolicy(BaseModel):
         mode="before",
     )
     @classmethod
-    def validate_optional_string_list(cls, value: Any) -> list[str] | None:
+    def validate_optional_string_list(cls, value: Any, info) -> list[str] | None:
         if value is None:
             return None
         if not isinstance(value, list):
@@ -144,7 +144,10 @@ class PolicyInfrastructureIdentityPolicy(BaseModel):
             candidate = item.strip()
             if candidate:
                 normalized.append(candidate)
-        if not normalized:
+        # An empty provider list intentionally means "no provider-name
+        # restriction" in infrastructure identity evaluation. Other trust
+        # dimensions must stay non-empty when explicitly configured.
+        if not normalized and info.field_name != "trusted_provider_names":
             raise ValueError("list cannot be empty")
         return normalized
 
