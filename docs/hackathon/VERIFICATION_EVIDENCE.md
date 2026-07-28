@@ -48,9 +48,37 @@ No issues found.
 
 ## Public candidate audit
 
-The final staged-file audit must report zero secrets and zero forbidden
-artifacts before commit. Record the exact public commit and CI run in this file
-after push.
+```text
+PUBLIC_AUDIT_OK files=116 required=9 secrets=0 forbidden=0
+```
+
+Deployment source commit:
+`804149c081ee990e6f3634e7f38d8da7fee87524`
+
+GitHub Actions:
+<https://github.com/Safe4AI/safe4-arc-demo/actions/runs/30322024446>
+(`success`)
+
+Railway deployment:
+`97ca4dfa-1581-449f-a748-9d99388f4899` (`SUCCESS`)
+
+Live verification:
+
+```text
+health_status=ok
+database=postgresql
+docs_http=200
+agent_demo_http=200
+console_demo_http=200
+x402_enabled=true
+x402_status=development_provider_plus_fallback
+x402_builder=stub
+x402_supported_networks=arc-testnet
+x402_arc_recipient=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+payment_http=402
+challenge_status=scaffolded
+challenge_builder=stub
+```
 
 ## Fresh Circle Agent Wallet settlement
 
