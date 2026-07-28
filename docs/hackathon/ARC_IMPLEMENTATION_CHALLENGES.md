@@ -64,7 +64,8 @@ the Agent Wallet path, and `circle-rpc-replay` proves the fresh transaction
 without broadcasting another transfer.
 
 **Evidence:** `verify_circle_agent_wallet_payloads`,
-`CircleAgentWalletVerifierTests`, and the
+`CircleAgentWalletVerifierTests`,
+`docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT.txt`, and the
 [Arcscan transaction](https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c).
 
 ## 4. Agent Stack support changed during the build

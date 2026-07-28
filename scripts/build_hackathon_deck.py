@@ -17,16 +17,19 @@ OUTPUT = ROOT / "artifacts" / "Safe4_Encode_Arc_Deck.pptx"
 W = 13.333
 H = 7.5
 
-BG = "090B0A"
-PANEL = "111512"
-PANEL_2 = "171C18"
-YELLOW = "E8FF3F"
-WHITE = "F4F6F0"
-MUTED = "99A39A"
-LINE = "313A32"
-GREEN = "70F6A5"
-RED = "FF7A68"
-CYAN = "7FE8FF"
+# Intentionally simple, high-contrast light palette. The final design pass can
+# reintroduce the dark Cipher aesthetic; this source deck prioritizes content
+# surviving PowerPoint/Google Slides imports without black-on-black text.
+BG = "FFFFFF"
+PANEL = "F3F4F6"
+PANEL_2 = "E5E7EB"
+YELLOW = "8A5A00"
+WHITE = "111827"
+MUTED = "4B5563"
+LINE = "CBD5E1"
+GREEN = "047857"
+RED = "B91C1C"
+CYAN = "075985"
 
 FONT = "Arial"
 MONO = "Consolas"
@@ -315,7 +318,7 @@ def build_deck() -> Presentation:
     add_title(slide, "Observed path", "Safe4 authorization + Circle Agent Wallet", "Fresh 0.01 testnet USDC settlement is RPC-verified through the ERC-4337 receipt.")
     nodes = [
         (0.42, "AGENT", "Task + budget"),
-        (2.84, "x402 SERVICE", "Payment required"),
+        (2.84, "SAFE4 402", "Scaffolded challenge"),
         (5.26, "SAFE4", "Policy + purpose"),
         (7.68, "CIRCLE", "Agent Wallet"),
         (10.1, "ARC", "USDC settlement"),
@@ -346,14 +349,14 @@ def build_deck() -> Presentation:
     add_pill(slide, "Allowed", 0.72, 2.98, 1.18, fill=GREEN)
     add_text(slide, "TASK_PURCHASE_MATCH", 0.72, 3.52, 5.1, 0.34, size=18, fill=WHITE, bold=True)
     add_text(slide, "Competitor-pricing research matches the assigned task and allowed category.", 0.72, 3.97, 5.05, 0.58, size=12.5, fill=MUTED)
-    add_text(slide, "HISTORICAL REPLAY · NOT BROADCAST BY DEMO", 0.72, 4.78, 5.08, 0.25, size=9.2, fill=GREEN, bold=True)
+    add_text(slide, "CIRCLE TX · RPC-VERIFIED REPLAY", 0.72, 4.78, 5.08, 0.25, size=9.2, fill=GREEN, bold=True)
     add_rect(slide, 6.94, 2.72, 5.92, 2.62, fill=PANEL, stroke=RED, width=1.4)
     add_pill(slide, "Denied", 7.22, 2.98, 1.18, fill=RED, text_fill=BG)
     add_text(slide, "PURCHASE_PURPOSE_MISMATCH", 7.22, 3.52, 5.1, 0.34, size=18, fill=WHITE, bold=True)
     add_text(slide, "Same amount, category, and counterparty. Gift-card purpose does not match the research task.", 7.22, 3.97, 5.0, 0.58, size=12.5, fill=MUTED)
     add_text(slide, "DEMO ORCHESTRATOR DID NOT INVOKE EXECUTOR", 7.22, 4.78, 5.08, 0.25, size=9.2, fill=RED, bold=True)
     add_rect(slide, 0.44, 5.75, 12.42, 0.7, fill=PANEL_2, stroke=LINE)
-    add_text(slide, "RPC-VERIFIED HISTORICAL ARC TX", 0.67, 5.97, 2.35, 0.2, size=8.5, fill=YELLOW, bold=True)
+    add_text(slide, "RPC-VERIFIED CIRCLE AGENT WALLET TX", 0.67, 5.97, 2.35, 0.2, size=8.1, fill=YELLOW, bold=True)
     add_text(slide, "0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c", 3.06, 5.91, 9.12, 0.28, size=9.2, fill=WHITE, font=MONO)
 
     # 07 — Arc / Circle rationale
@@ -365,8 +368,8 @@ def build_deck() -> Presentation:
         "Sources: docs.arc.io · developers.circle.com/agent-stack · developers.circle.com/agent-stack/agent-wallets/supported-blockchains",
     )
     add_title(slide, "Infrastructure choice", "Why Arc, USDC, and Circle")
-    add_panel(slide, 0.44, 2.8, 3.75, 3.06, label="Arc", title="Payment-native chain", body="A purpose-built environment for programmable money. Safe4's exact verifier checks chain, token, calldata, receipt status, and Transfer event.", accent=YELLOW)
-    add_panel(slide, 4.79, 2.8, 3.75, 3.06, label="USDC", title="Precise settlement", body="Six-decimal, dollar-denominated testnet evidence makes the demo amount and token contract unambiguous.", accent=GREEN)
+    add_panel(slide, 0.44, 2.8, 3.75, 3.06, label="Arc", title="Two exact verifier paths", body="Direct ERC-20: token + calldata. Agent Wallet: EntryPoint + successful UserOperation + exact transfer event.", accent=YELLOW)
+    add_panel(slide, 4.79, 2.8, 3.75, 3.06, label="USDC", title="One balance, two precisions", body="Arc native RPC values use 18 decimals; the ERC-20 interface uses 6. Safe4 normalizes the exact 0.01 amount.", accent=GREEN)
     add_panel(slide, 9.14, 2.8, 3.75, 3.06, label="Circle Agent Stack", title="Agent-native execution", body="An authenticated Agent Wallet settled 0.01 testnet USDC after ALLOW. Safe4 verifies its ERC-4337 receipt.", accent=CYAN)
 
     # 08 — Differentiation

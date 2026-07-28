@@ -26,15 +26,16 @@ data service. The proposed purchase is a competitor-pricing research brief for
 zero point zero one USDC. It is within budget, the category is allowed, and the
 purchase purpose matches the task.
 
-I run one command: `bash scripts/demo_golden_path.sh`.
+I run one command: `bash scripts/demo_circle_replay.sh`.
 
 Safe4 returns ALLOWED with the reason `TASK_PURCHASE_MATCH`. The safe replay
-mode then asks Arc Testnet RPC to verify an existing real USDC transfer. It
-checks chain ID 5042002, the official testnet USDC contract, sender, recipient,
-exact amount and calldata, successful receipt, and matching Transfer event.
+mode then asks Arc Testnet RPC to verify the fresh Circle Agent Wallet
+transaction. It checks chain ID 5042002, the ERC-4337 EntryPoint target, a
+successful UserOperation for the wallet, and the exact native-USDC sender,
+recipient, and 18-decimal amount event before normalizing it to 0.01 USDC.
 The transaction hash appears in the demo evidence bundle and opens in the
-Arc explorer. This is explicitly replay evidence, not a claim that the command
-broadcast a fresh transfer.
+Arc explorer. This command re-verifies the earlier live transfer; it does not
+broadcast another one.
 
 Now the agent proposes a gift card for an unrelated entertainment giveaway.
 The amount, service category, and counterparty are unchanged. Circle policy is
@@ -66,7 +67,7 @@ Safe4 for the Circle Agent Marketplace.
 |---|---|---|
 | 0:00–0:30 | Slide 2 | Caption: “A valid wallet action can still be the wrong action.” |
 | 0:30–0:50 | Slide 1, then slide 4 | Caption: “Payment firewall for AI agents.” |
-| 0:50–1:00 | Terminal at repo root | Show `bash scripts/demo_golden_path.sh` before pressing Enter. |
+| 0:50–1:00 | Terminal at repo root | Show `bash scripts/demo_circle_replay.sh` before pressing Enter. |
 | 1:00–1:35 | Terminal allowed block | Hold on task, amount, checks, `VERDICT=ALLOWED`, and reason. |
 | 1:35–1:52 | Terminal transaction lines | Hold on `settlement=RPC_VERIFIED` and the full hash. |
 | 1:52–2:02 | Arcscan transaction tab | Show Arc Testnet badge and successful USDC transfer; caption “historical replay evidence.” |
@@ -84,14 +85,14 @@ Safe4 for the Circle Agent Marketplace.
    - terminal at repository root;
    - [Fresh Circle Agent Wallet transaction](https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c).
 4. Increase terminal font until each stable marker remains readable at 1080p.
-5. Run `bash scripts/demo_golden_path.sh` once off-camera as a network preflight.
+5. Run `bash scripts/demo_circle_replay.sh` once off-camera as a network preflight.
 6. Clear the terminal, start recording, then run the same command once.
 
 ## Rehearsal checklist
 
 - [ ] Desktop notifications and unrelated browser tabs are closed.
 - [ ] No `.env`, private key, wallet credential, email, or OTP is visible.
-- [ ] Terminal shows `MODE=RPC_VERIFIED_REPLAY`.
+- [ ] Terminal shows `MODE=CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY`.
 - [ ] Allowed and denied reasons fit on screen without horizontal scrolling.
 - [ ] Arcscan visibly says Testnet and the hash matches the terminal.
 - [ ] The script says the replay did not broadcast a fresh transfer.
@@ -107,4 +108,5 @@ Safe4 for the Circle Agent Marketplace.
   <https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c>
 - Arc evidence document: `docs/ARC_TESTNET_EVIDENCE.md`
 - Committed demo transcript: `docs/hackathon/DEMO_TRANSCRIPT.txt`
+- Sanitized live execution evidence: `docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT.txt`
 - Raw regression evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`

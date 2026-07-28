@@ -1,0 +1,54 @@
+Safe4 + Circle live execution evidence — observed 28 July 2026
+Secrets, email, OTP, access tokens, and local session data are omitted.
+
+SOURCE A — exact relevant stdout from the authorized circle-live run
+
+SAFE4_GOLDEN_PATH_START
+MODE=CIRCLE_AGENT_WALLET_LIVE
+Circle Agent Stack execution boundary: settlement is invoked only after Safe4 returns ALLOWED.
+SCENARIO=TASK_MATCH
+task=Research competitor pricing using a paid company data service.
+proposed_purchase=Generate a competitor pricing research brief from company data.
+amount=0.01 USDC
+counterparty=circle_marketplace_company_research
+task_context_trust=request-supplied-untrusted
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+reason=The proposed purchase matches the submitted task context and an explicitly allowed service category.
+SAFE4_GOLDEN_PATH_FAIL: transaction target is not the configured USDC contract
+
+Interpretation: the Circle CLI subprocess returned a transaction hash, after
+which the old direct-ERC-20 verifier rejected the top-level ERC-4337 envelope.
+The script cannot reach that verifier unless Safe4 has already returned ALLOWED
+and the Circle transfer command has completed. See SettlementExecutor.settle()
+and the call ordering in scripts/demo_golden_path.py.
+
+SOURCE B — authenticated Circle CLI transaction history after the run
+
+state=COMPLETE
+blockchain=ARC-TESTNET
+operation=TRANSFER
+transactionType=OUTBOUND
+txHash=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
+sourceAddress=0x3985a31e4e42a31e437c1099306decbe2f08da4d
+destinationAddress=0x530271da8cc4e44375f22ad9632bc61a55382f88
+amount=0.01
+blockHeight=54014886
+firstConfirmDate=2026-07-28T01:43:15Z
+
+SOURCE C — corrected no-broadcast ERC-4337 replay
+
+Command: bash scripts/demo_circle_replay.sh
+MODE=CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+settlement=RPC_VERIFIED
+transaction_hash=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
+VERDICT=DENIED
+reason_code=PURCHASE_PURPOSE_MISMATCH
+DENIED_DEMO_EXECUTOR_NOT_INVOKED=PASS
+SAFE4_GOLDEN_PATH_OK
+
+These sources are deliberately separated. The replay did not broadcast the
+transaction, and the initial live run stopped after broadcast when its old
+EOA-shaped verifier failed closed.

@@ -60,10 +60,7 @@ adapter reaches the transfer command only after ALLOWED.
 To re-verify the fresh Agent Wallet transaction without broadcasting again:
 
 ```bash
-SAFE4_DEMO_MODE=circle-rpc-replay \
-SETTLEMENT_TX=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c \
-SETTLEMENT_FROM=0x3985a31e4e42a31e437c1099306decbe2f08da4d \
-bash scripts/demo_golden_path.sh
+bash scripts/demo_circle_replay.sh
 ```
 
 - [Editable 10-slide deck](artifacts/Safe4_Encode_Arc_Deck.pptx)

@@ -1,8 +1,8 @@
 Safe4 golden path — observed 28 July 2026
-Command: bash scripts/demo_golden_path.sh
+Command: bash scripts/demo_circle_replay.sh
 
 SAFE4_GOLDEN_PATH_START
-MODE=RPC_VERIFIED_REPLAY
+MODE=CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY
 Circle Agent Stack execution boundary: settlement is invoked only after Safe4 returns ALLOWED.
 
 SCENARIO=TASK_MATCH
@@ -15,10 +15,10 @@ VERDICT=ALLOWED
 reason_code=TASK_PURCHASE_MATCH
 reason=The proposed purchase matches the submitted task context and an explicitly allowed service category.
 settlement=RPC_VERIFIED
-transaction_hash=0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a
-explorer_url=https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a
+transaction_hash=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
+explorer_url=https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
 historical_replay_notice=RPC_VERIFIED_TRANSACTION_NOT_BROADCAST_BY_THIS_DEMO
-demo_evidence_bundle={"decision":"ALLOWED","intent_decision":{"reason_code":"TASK_PURCHASE_MATCH","task_context_trust":"request-supplied-untrusted"},"settlement":{"chain":"ARC-TESTNET","mode":"RPC_VERIFIED_REPLAY","rpc_verified":true,"transaction_hash":"0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a"}}
+demo_evidence_bundle={"decision":"ALLOWED","intent_decision":{"reason_code":"TASK_PURCHASE_MATCH","task_context_trust":"request-supplied-untrusted"},"settlement":{"amount_usdc":"0.010000","block_number":54014886,"chain":"ARC-TESTNET","execution_path":"ERC_4337_AGENT_WALLET","mode":"CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY","recipient":"0x530271DA8CC4e44375f22ad9632bC61A55382f88","rpc_verified":true,"sender":"0x3985a31e4e42a31e437c1099306decbe2f08da4d","transaction_hash":"0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c"}}
 
 UNCHANGED_INPUTS amount=True category=True counterparty=True
 CIRCLE_POLICY=NOT_INVOKED_IN_RPC_REPLAY

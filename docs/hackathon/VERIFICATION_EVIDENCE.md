@@ -98,6 +98,21 @@ rpc_verified=true
 Explorer:
 <https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c>
 
+Circle CLI's authenticated transaction history independently returned:
+
+```text
+state=COMPLETE
+blockchain=ARC-TESTNET
+operation=TRANSFER
+transactionType=OUTBOUND
+txHash=0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c
+sourceAddress=0x3985a31e4e42a31e437c1099306decbe2f08da4d
+destinationAddress=0x530271da8cc4e44375f22ad9632bc61a55382f88
+amount=0.01
+blockHeight=54014886
+firstConfirmDate=2026-07-28T01:43:15Z
+```
+
 The initial live verification failed closed because the existing verifier
 expected a direct EOA-to-ERC-20 transaction. The transfer had succeeded through
 Circle's ERC-4337 EntryPoint. The corrected verifier requires both the
