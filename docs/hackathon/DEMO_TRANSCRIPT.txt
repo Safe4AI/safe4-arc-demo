@@ -1,0 +1,39 @@
+Safe4 golden path — observed 28 July 2026
+Command: bash scripts/demo_golden_path.sh
+
+SAFE4_GOLDEN_PATH_START
+MODE=RPC_VERIFIED_REPLAY
+Circle Agent Stack execution boundary: settlement is invoked only after Safe4 returns ALLOWED.
+
+SCENARIO=TASK_MATCH
+task=Research competitor pricing using a paid company data service.
+proposed_purchase=Generate a competitor pricing research brief from company data.
+amount=0.01 USDC
+counterparty=circle_marketplace_company_research
+task_context_trust=request-supplied-untrusted
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+reason=The proposed purchase matches the submitted task context and an explicitly allowed service category.
+settlement=RPC_VERIFIED
+transaction_hash=0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a
+explorer_url=https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a
+historical_replay_notice=RPC_VERIFIED_TRANSACTION_NOT_BROADCAST_BY_THIS_DEMO
+demo_evidence_bundle={"decision":"ALLOWED","intent_decision":{"reason_code":"TASK_PURCHASE_MATCH","task_context_trust":"request-supplied-untrusted"},"settlement":{"chain":"ARC-TESTNET","mode":"RPC_VERIFIED_REPLAY","rpc_verified":true,"transaction_hash":"0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a"}}
+
+UNCHANGED_INPUTS amount=True category=True counterparty=True
+CIRCLE_POLICY=NOT_INVOKED_IN_RPC_REPLAY
+SCENARIO=TASK_MISMATCH
+task=Research competitor pricing using a paid company data service.
+proposed_purchase=Purchase a gift card for an unrelated entertainment giveaway.
+amount=0.01 USDC
+counterparty=circle_marketplace_company_research
+task_context_trust=request-supplied-untrusted
+VERDICT=DENIED
+reason_code=PURCHASE_PURPOSE_MISMATCH
+reason=The amount and service category are permitted, but the proposed purchase does not meaningfully match the submitted task context.
+demo_orchestrator_broadcast=NOT_INVOKED_AFTER_SAFE4_DENIED
+settlement_executor_calls_before=1
+settlement_executor_calls_after=1
+DENIED_DEMO_EXECUTOR_NOT_INVOKED=PASS
+
+SAFE4_GOLDEN_PATH_OK

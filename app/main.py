@@ -117,6 +117,7 @@ from .core.config import (
     parse_x402_network_recipient_addresses,
     parse_x402_provider_keys,
 )
+from .core.intent import IntentDecision, evaluate_payment_intent
 
 
 MONEY_SCALE = Decimal("0.000001")
@@ -844,7 +845,7 @@ APP_PORT = int(os.getenv("APP_PORT", "8090"))
 PORT = int(os.getenv("PORT", str(APP_PORT)))
 FEE_RATE = normalize_money(_env_decimal("PAYMENT_FIREWALL_FEE_RATE", "0.0025"))
 MIN_DESCRIPTION_WORDS = int(os.getenv("MIN_DESCRIPTION_WORDS", "10"))
-PAY_TO_ADDRESS = os.getenv("PAYMENT_FIREWALL_PAY_TO", "wallet_address")
+PAY_TO_ADDRESS = os.getenv("PAYMENT_FIREWALL_PAY_TO", "").strip()
 DEFAULT_RECEIPT_TTL_SECONDS = int(os.getenv("PAYMENT_FIREWALL_RECEIPT_TTL_SECONDS", "300"))
 ACCESS_TOKEN_TTL_SECONDS = int(os.getenv("PAYMENT_FIREWALL_ACCESS_TOKEN_TTL_SECONDS", "900"))
 REFRESH_TOKEN_TTL_SECONDS = int(os.getenv("PAYMENT_FIREWALL_REFRESH_TOKEN_TTL_SECONDS", "86400"))
@@ -1304,6 +1305,8 @@ def validate_startup_configuration() -> None:
         missing.append("PAYMENT_FIREWALL_ADMIN_SECRET")
     if RECEIPT_SECRET == "dev-insecure-receipt-secret":
         missing.append("PAYMENT_FIREWALL_RECEIPT_SECRET")
+    if not PAY_TO_ADDRESS or PAY_TO_ADDRESS == "wallet_address":
+        missing.append("PAYMENT_FIREWALL_PAY_TO")
 
     if missing:
         raise RuntimeError(
@@ -1529,11 +1532,21 @@ metrics = MetricsCollector()
 rate_limiter = RateLimiter(RATE_LIMIT_REQUESTS, RATE_LIMIT_WINDOW_SECONDS)
 
 
-def verify_intent(description: str) -> bool:
-    normalized = description.strip().lower()
-    keywords = {"approved", "invoice", "subscription", "mandate", "renewal", "ticket"}
-    word_count = len([word for word in normalized.split() if word])
-    return word_count >= get_runtime_min_description_words() or any(word in normalized for word in keywords)
+def verify_intent(description: str, context: dict[str, Any] | None = None) -> bool:
+    """Compatibility wrapper around the explainable task-bound evaluator."""
+    return evaluate_payment_intent(
+        description=description,
+        context=context,
+        legacy_minimum_words=get_runtime_min_description_words(),
+    ).allowed
+
+
+def evaluate_intent(payment: PaymentRequest) -> IntentDecision:
+    return evaluate_payment_intent(
+        description=payment.description,
+        context=payment.context,
+        legacy_minimum_words=get_runtime_min_description_words(),
+    )
 
 
 def compute_firewall_fee(amount: Decimal) -> Decimal:
@@ -2370,8 +2383,10 @@ def authorize_payment(
             mcp_tool_name=mcp_tool_name,
         )
 
-    if not verify_intent(payment.description):
-        reason = "Purchase justification failed intent verification."
+    intent_decision = evaluate_intent(payment)
+    request.state.intent_decision = intent_decision.public_details()
+    if not intent_decision.allowed:
+        reason = intent_decision.reason
         return deny_payment(
             request=request,
             payment=payment,
@@ -2382,12 +2397,7 @@ def authorize_payment(
             status_code=status.HTTP_403_FORBIDDEN,
             error_code="INTENT_VERIFICATION_FAILED",
             message=reason,
-            details={
-                "requirement": (
-                    f"Provide at least {get_runtime_min_description_words()} words or include "
-                    "an approved keyword such as 'invoice' or 'mandate'."
-                ),
-            },
+            details={"intent_decision": intent_decision.public_details()},
             metric_name="payment_denied_intent_total",
             append_log_reason=reason,
             mark_receipt_id=receipt_id or "",

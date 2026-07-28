@@ -2,28 +2,62 @@
 
 Safe4 sits between an AI agent's decision to pay and the execution of that
 payment. It checks whether the payment is authorized, within policy, consistent
-with the agent's task, and safe to settle before allowing USDC to move.
+with submitted task context, and safe to settle before allowing USDC to move.
 
 This is the public build repository for Safe4's Encode x Arc Programmable Money
 Hackathon submission in the Agentic Economy track.
 
-## Midpoint status
+## Current verified status
 
 As of 28 July 2026:
 
 - the FastAPI payment-firewall service and its policy, approval, receipt, audit,
   AP2, x402, MCP-governance, and anomaly-control paths are implemented
-- the Python 3.13 regression gate passes with 270 tests
+- the Python 3.13 regression gate passes with 286 tests
 - a real `0.01 USDC` transfer has settled on Arc Testnet and is independently
   verifiable by RPC
-- the standalone Arc sender never logs or persists its private key
-- wiring RPC-confirmed Arc settlement into Safe4's x402 payment path is in
-  progress
-- semantic task-to-payment intent verification is in progress; the current
-  keyword heuristic is not presented as semantic verification
+- the one-command golden path runs Safe4's real `/pay` authorization flow,
+  shows one ALLOWED and one DENIED decision, and re-verifies the transaction
+  through Arc RPC
+- deterministic task-to-payment matching against request-supplied context changes the outcome for a
+  same-amount, same-category, same-counterparty purchase
+- the optional Circle Agent Stack adapter is coded to attempt an Arc Testnet
+  Agent Wallet transfer only after ALLOWED; authenticated validation is pending
 
 The midpoint submission is due 2 August 2026. Final submission is due
 22 August 2026.
+
+## Run the golden path
+
+Python **3.13** is required. After installing the repository dependencies, run:
+
+```bash
+bash scripts/demo_golden_path.sh
+```
+
+Stable output includes the task, purchase, amount, counterparty, checks,
+ALLOWED/DENIED reasons, real Arc transaction hash and explorer URL, plus the
+demo executor call count showing that this orchestrator did not invoke
+settlement for the denied branch.
+
+The default `RPC_VERIFIED_REPLAY` mode is safe and unattended. It verifies
+existing real chain evidence and clearly states that it did not broadcast a
+fresh transfer. It does not need `ARC_PRIVATE_KEY` or any wallet credential.
+
+Optional fresh Circle Agent Wallet execution:
+
+```bash
+SAFE4_DEMO_MODE=circle-live bash scripts/demo_golden_path.sh
+```
+
+That mode requires Circle CLI plus an authenticated Arc Testnet Agent Wallet
+session. Circle's email OTP and Terms acceptance remain human-controlled. The
+adapter is coded to reach the transfer command only after ALLOWED; a successful
+authenticated Circle run is not yet claimed.
+
+- [Editable 10-slide deck](artifacts/Safe4_Encode_Arc_Deck.pptx)
+- [Video script, run sheet, and rehearsal checklist](docs/hackathon/VIDEO_PACKAGE.md)
+- [Claim ledger](docs/hackathon/CLAIM_LEDGER.md)
 
 ## Verified Arc transaction
 
@@ -53,10 +87,10 @@ flowchart LR
     G --> H[Safe4 receipt + audit trail]
 ```
 
-Safe4 is the reasoning and governance layer above wallet-native spending
-controls. It combines the proposed payment with task intent, autonomy scope,
-budgets, velocity, approval state, recipient signals, and auditable decision
-evidence.
+Safe4 is the task-aware authorization and governance layer above wallet-native
+spending controls. It combines the proposed payment with task intent, autonomy
+scope, budgets, velocity, approval state, recipient signals, and auditable
+decision evidence.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the trust boundary and
 the current settlement integration seam.
@@ -130,6 +164,10 @@ python -m pytest -q
 Never paste it into an issue, pull request, command transcript, `.env` file, or
 committed configuration. Verification of an existing transaction does not
 require a private key.
+
+The default demo and Circle Agent Wallet mode do not read `ARC_PRIVATE_KEY`.
+Circle Agent Wallet credentials are managed by Circle CLI; never commit its
+session data or expose an OTP.
 
 ## Repository scope
 

@@ -409,7 +409,10 @@ def build_provider_receipt_token(
         "issued_at": issued_at if issued_at is not None else datetime.now(timezone.utc).isoformat(),
         "settlement_reference": settlement_reference,
         "settlement_proof_type": settlement_proof_type,
-        "settlement_proof_value": settlement_proof_value or (f"proof_{receipt_id}" if settlement_proof_type else None),
+        # Never manufacture a hash-shaped proof. A caller that claims a
+        # settlement proof must supply the observed value; the verifier will
+        # reject a missing value.
+        "settlement_proof_value": settlement_proof_value,
         "confirmation_count": confirmation_count,
         "confirmed_at": confirmed_at if confirmed_at is not None else settled_at,
         "pay_to": pay_to,

@@ -14,7 +14,8 @@ htmlcov/
 .idea/
 .vscode/
 secrets/
-artifacts/
+artifacts/*
+!artifacts/Safe4_Encode_Arc_Deck.pptx
 payment_firewall.db
 *.db
 *.sqlite

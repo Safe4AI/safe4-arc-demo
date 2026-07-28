@@ -153,6 +153,16 @@ def finalize_authorized_payment(
     else:
         _store.mark_receipt_used(receipt_id or "")
     _append_log(request, payment, amount_due, "AUTHORIZED", None, started_at, idempotency_key)
+    intent_decision = getattr(request.state, "intent_decision", None)
+    authorization_details = {
+        "status": "AUTHORIZED",
+        "receipt_id": receipt_id,
+        "receipt_source": receipt_source,
+        "total_decision_latency_ms": int((time.perf_counter() - started_at) * 1000),
+        "finalization_latency_ms": int((time.perf_counter() - finalize_started_at) * 1000),
+    }
+    if isinstance(intent_decision, dict):
+        authorization_details["intent_decision"] = intent_decision
     _append_audit_entry(
         actor_type="agent",
         actor_id=payment.agent_id,
@@ -162,13 +172,7 @@ def finalize_authorized_payment(
         request_payload_summary=payment_request_summary(payment, include_mcp=bool(payment.mcp_tool_id)),
         decision="authorized",
         decision_reason=None,
-        decision_details={
-            "status": "AUTHORIZED",
-            "receipt_id": receipt_id,
-            "receipt_source": receipt_source,
-            "total_decision_latency_ms": int((time.perf_counter() - started_at) * 1000),
-            "finalization_latency_ms": int((time.perf_counter() - finalize_started_at) * 1000),
-        },
+        decision_details=authorization_details,
         transaction_id=transaction_id,
         transaction_amount=payment.amount,
         transaction_currency=payment.currency,
@@ -296,6 +300,8 @@ def finalize_authorized_payment(
             "agent_budget_snapshot": _serialize_budget(agent_budget),
         }
     )
+    if isinstance(intent_decision, dict):
+        body["intent_decision"] = intent_decision
     response = JSONResponse(status_code=200, content=body)
     if idempotency_key:
         _store.save_idempotency(idempotency_key, request_hash, response.status_code, body)

@@ -727,6 +727,63 @@ class PaymentFirewallTests(unittest.TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(response.json()["code"], "INTENT_VERIFICATION_FAILED")
 
+    def test_pay_allows_task_bound_matching_purchase(self) -> None:
+        payload = self.valid_payload | {
+            "amount": 0.001,
+            "currency": "USDC",
+            "description": "Generate a competitor pricing research brief from company data.",
+            "context": {
+                "payment_intent": {
+                    "task_id": "task_competitor_pricing_001",
+                    "task": "Research competitor pricing using a paid company data service.",
+                    "allowed_service_categories": ["company-research"],
+                    "service_category": "company-research",
+                }
+            },
+        }
+        receipt_token = self.issue_receipt_for(payload)
+
+        response = self.client.post(
+            "/pay",
+            json=payload,
+            headers=self.auth_headers(**{"X-Payment-Receipt": receipt_token}),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        decision = response.json()["intent_decision"]
+        self.assertTrue(decision["allowed"])
+        self.assertEqual(decision["reason_code"], "TASK_PURCHASE_MATCH")
+        self.assertEqual(decision["mode"], "task-bound")
+
+    def test_pay_denies_semantic_mismatch_inside_static_limits(self) -> None:
+        payload = self.valid_payload | {
+            "amount": 0.001,
+            "currency": "USDC",
+            "description": "Purchase a gift card for an unrelated entertainment giveaway.",
+            "context": {
+                "payment_intent": {
+                    "task_id": "task_competitor_pricing_001",
+                    "task": "Research competitor pricing using a paid company data service.",
+                    "allowed_service_categories": ["company-research"],
+                    "service_category": "company-research",
+                }
+            },
+        }
+        receipt_token = self.issue_receipt_for(payload)
+
+        response = self.client.post(
+            "/pay",
+            json=payload,
+            headers=self.auth_headers(**{"X-Payment-Receipt": receipt_token}),
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.json()["code"], "INTENT_VERIFICATION_FAILED")
+        decision = response.json()["details"]["intent_decision"]
+        self.assertFalse(decision["allowed"])
+        self.assertEqual(decision["reason_code"], "PURCHASE_PURPOSE_MISMATCH")
+        self.assertIn("amount and service category are permitted", decision["reason"])
+
     def test_budget_update_endpoint_applies_new_limits(self) -> None:
         update_response = self.client.post(
             "/budgets",
@@ -1231,7 +1288,10 @@ class PaymentFirewallTests(unittest.TestCase):
 
     def test_description_is_sanitized(self) -> None:
         payload = self.valid_payload | {
-            "description": "<script>alert('x')</script><b>Book</b> the approved train ticket for tomorrow client meeting.",
+            "description": (
+                "<script>alert('x')</script><b>Book</b> the train ticket for tomorrow's "
+                "client meeting with the sales team."
+            ),
         }
         receipt_token = self.issue_receipt_for(payload)
         response = self.client.post(
@@ -1241,7 +1301,10 @@ class PaymentFirewallTests(unittest.TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(main.store.list_logs()[-1]["justification"], "Book the approved train ticket for tomorrow client meeting.")
+        self.assertEqual(
+            main.store.list_logs()[-1]["justification"],
+            "Book the train ticket for tomorrow's client meeting with the sales team.",
+        )
 
     def test_request_body_size_limit_is_enforced(self) -> None:
         oversized = self.valid_payload | {"description": "approved " * 9000}
