@@ -24,8 +24,9 @@ As of 28 July 2026:
 - the optional Circle Agent Stack adapter is coded to attempt an Arc Testnet
   Agent Wallet transfer only after ALLOWED; authenticated validation is pending
 
-The midpoint submission is due 2 August 2026. Final submission is due
-22 August 2026.
+The midpoint milestone was 27 July 2026. Integration runs 27–31 July,
+proof runs 1–8 August, and final submission is due 9 August 2026; the exact
+dashboard cutoff and timezone remain to be confirmed.
 
 ## Run the golden path
 

@@ -1,4 +1,4 @@
-# Safe4 midpoint submission — 2 August 2026
+# Safe4 midpoint submission — 27 July 2026
 
 ## Project
 
@@ -29,7 +29,7 @@ allowed, and records the reason and evidence for the decision.
 - Transaction:
   [`0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a`](https://testnet.arcscan.app/tx/0x24e9595078de0778428eea09af2a10ec53828c10aca6e4c5517ef1dd09144a7a)
 
-## Work toward final submission — 22 August 2026
+## Work toward final submission — 9 August 2026
 
 1. Authenticate a Circle Arc Testnet Agent Wallet and capture a fresh,
    post-authorization live transfer.
