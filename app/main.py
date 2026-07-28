@@ -881,7 +881,14 @@ AP2_SIGNER_KEYS = parse_ap2_signer_keys(
         f"default:{AP2_SHARED_SECRET},merchant_v1:{AP2_SHARED_SECRET}",
     )
 )
-X402_SUPPORTED_NETWORKS = [item.strip() for item in os.getenv("PAYMENT_FIREWALL_X402_SUPPORTED_NETWORKS", "base,solana,ethereum-l2").split(",") if item.strip()]
+X402_SUPPORTED_NETWORKS = [
+    item.strip()
+    for item in os.getenv(
+        "PAYMENT_FIREWALL_X402_SUPPORTED_NETWORKS",
+        "arc-testnet,base,solana,ethereum-l2",
+    ).split(",")
+    if item.strip()
+]
 X402_NETWORK_RECIPIENT_ADDRESSES = parse_x402_network_recipient_addresses(
     os.getenv("PAYMENT_FIREWALL_X402_NETWORK_RECIPIENTS"),
     supported_networks=X402_SUPPORTED_NETWORKS,

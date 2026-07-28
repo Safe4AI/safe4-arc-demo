@@ -21,6 +21,8 @@ As of 28 July 2026:
   through Arc RPC
 - deterministic task-to-payment matching against request-supplied context changes the outcome for a
   same-amount, same-category, same-counterparty purchase
+- x402 challenges advertise Arc Testnet first and map its recipient to the
+  explicitly configured payment destination
 - the optional Circle Agent Stack adapter is coded to attempt an Arc Testnet
   Agent Wallet transfer only after ALLOWED; authenticated validation is pending
 
@@ -144,6 +146,26 @@ Then open
 `safe4-local-demo` and the other defaults in `scripts/run_local_demo.py` are
 deliberately public, local-development values. Do not reuse them for a shared
 or production-like deployment.
+
+## Deploy on Railway
+
+[`railway.json`](railway.json) pins the Dockerfile build, `python main.py`
+start command, `/health` deployment gate, and on-failure restart policy.
+The shared deployment must supply these values through Railway variables:
+
+- `PAYMENT_FIREWALL_ENV=production`
+- `PAYMENT_FIREWALL_POSTGRES_DSN=${{Postgres.DATABASE_URL}}`
+- independently generated `PAYMENT_FIREWALL_ADMIN_SECRET`,
+  `PAYMENT_FIREWALL_RECEIPT_SECRET`, and
+  `PAYMENT_FIREWALL_DEMO_ACCESS_TOKEN`
+- `PAYMENT_FIREWALL_PAY_TO=<Arc Testnet recipient>`
+- `PAYMENT_FIREWALL_X402_SUPPORTED_NETWORKS=arc-testnet`
+- `PAYMENT_FIREWALL_X402_NETWORK_RECIPIENTS=arc-testnet:<same recipient>`
+- `PAYMENT_FIREWALL_OAUTH_ISSUER=https://<generated Railway domain>`
+
+Do not commit the generated secret values. A public deployment is not claimed
+until its health, demo pages, and authorization flow have been checked at the
+deployed URL.
 
 ## Tests
 

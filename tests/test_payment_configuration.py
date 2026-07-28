@@ -16,6 +16,14 @@ def _decode_provider_payload(token: str) -> dict[str, object]:
     return json.loads(base64.urlsafe_b64decode(payload_segment + padding))
 
 
+def test_arc_testnet_is_the_default_x402_network() -> None:
+    assert main.X402_SUPPORTED_NETWORKS[0] == "arc-testnet"
+    assert (
+        main.X402_NETWORK_RECIPIENT_ADDRESSES["arc-testnet"]
+        == main.PAY_TO_ADDRESS
+    )
+
+
 def test_provider_receipt_builder_never_invents_settlement_proof() -> None:
     token = main.build_provider_receipt_token(
         receipt_id="receipt_without_observed_proof",
