@@ -907,6 +907,9 @@ INFRA_IDENTITY_SHARED_SECRET = os.getenv(
     "dev-insecure-infra-identity-secret",
 )
 APP_ENV = os.getenv("PAYMENT_FIREWALL_ENV", "development").lower()
+DEMO_X402_RECEIPT_ENABLED = (
+    os.getenv("PAYMENT_FIREWALL_DEMO_X402_RECEIPT_ENABLED", "false").lower() == "true"
+)
 INFRA_K8S_JWT_ISSUER = os.getenv(
     "PAYMENT_FIREWALL_INFRA_K8S_JWT_ISSUER",
     "https://kubernetes.default.svc.cluster.local",
@@ -1980,6 +1983,12 @@ setup_integrations_api(
 )
 setup_demo_api(
     demo_access_token=os.getenv("PAYMENT_FIREWALL_DEMO_ACCESS_TOKEN"),
+    demo_x402_receipt_enabled=DEMO_X402_RECEIPT_ENABLED,
+    issue_receipt=issue_receipt if DEMO_X402_RECEIPT_ENABLED else None,
+    append_audit_entry=append_audit_entry if DEMO_X402_RECEIPT_ENABLED else None,
+    pay_to_address=PAY_TO_ADDRESS,
+    get_current_identity=get_current_identity,
+    ensure_scope=ensure_scope,
 )
 app.include_router(audit_router)
 app.include_router(ap2_router)
@@ -2044,7 +2053,7 @@ async def add_request_context(request: Request, call_next):
         response.headers["X-Request-Id"] = request.state.request_id
         return response
 
-    limited_paths = {"/pay", "/receipts/issue"}
+    limited_paths = {"/pay", "/receipts/issue", "/demo/x402/receipt"}
     if request.url.path in limited_paths:
         client_key = request.headers.get("X-Forwarded-For", request.client.host if request.client else "unknown")
         allowed, retry_after = rate_limiter.allow(f"{request.url.path}:{client_key}")

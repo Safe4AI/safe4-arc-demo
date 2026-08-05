@@ -17,6 +17,7 @@ import subprocess
 import sys
 import tempfile
 from typing import Any
+from uuid import UUID
 
 import httpx
 from fastapi.testclient import TestClient
@@ -45,6 +46,17 @@ def _required_env(name: str) -> str:
     if not value:
         raise RuntimeError(f"{name} is required")
     return value
+
+
+def _required_uuid4_env(name: str) -> str:
+    value = _required_env(name)
+    try:
+        parsed = UUID(value)
+    except ValueError as exc:
+        raise RuntimeError(f"{name} must be a UUIDv4") from exc
+    if parsed.version != 4 or str(parsed) != value.lower():
+        raise RuntimeError(f"{name} must be a canonical UUIDv4")
+    return str(parsed)
 
 
 def _verify_arc_transaction(transaction_hash: str) -> dict[str, Any]:
@@ -205,6 +217,7 @@ class SettlementExecutor:
         sender = _required_env("SETTLEMENT_FROM")
         recipient = _required_env("SETTLEMENT_TO")
         amount_units = int(_required_env("SETTLEMENT_AMOUNT_UNITS"))
+        idempotency_key = _required_uuid4_env("SETTLEMENT_IDEMPOTENCY_KEY")
         amount = f"{amount_units / 1_000_000:.6f}"
         command = [
             circle,
@@ -217,6 +230,8 @@ class SettlementExecutor:
             sender,
             "--chain",
             ARC_CHAIN,
+            "--idempotency-key",
+            idempotency_key,
             "--output",
             "json",
         ]
@@ -354,6 +369,19 @@ def _print_scenario(
     print(f"reason={reason}")
 
 
+def _settlement_notice_lines(mode: str) -> tuple[str, str]:
+    if mode == "circle-live":
+        return (
+            "live_broadcast_notice=FRESH_ARC_TESTNET_TRANSACTION_BROADCAST_AFTER_SAFE4_ALLOW",
+            "CIRCLE_POLICY=INVOKED_ONCE_AFTER_SAFE4_ALLOW",
+        )
+    return (
+        "historical_replay_notice="
+        "RPC_VERIFIED_TRANSACTION_NOT_BROADCAST_BY_THIS_DEMO",
+        "CIRCLE_POLICY=NOT_INVOKED_IN_RPC_REPLAY",
+    )
+
+
 def run() -> int:
     mode = os.getenv("SAFE4_DEMO_MODE", "rpc-replay").strip().lower()
     settlement = SettlementExecutor(mode)
@@ -361,9 +389,15 @@ def run() -> int:
     # Import after isolating the demo database and setting a real, validated
     # public routing address. No secret material is read or persisted.
     with tempfile.TemporaryDirectory(prefix="safe4-golden-path-") as temp_dir:
-        os.environ["PAYMENT_FIREWALL_DB_PATH"] = str(Path(temp_dir) / "safe4-demo.db")
+        isolated_db_path = (Path(temp_dir) / "safe4-demo.db").resolve()
+        os.environ.pop("PAYMENT_FIREWALL_POSTGRES_DSN", None)
+        os.environ["PAYMENT_FIREWALL_DB_PATH"] = str(isolated_db_path)
+        os.environ["PAYMENT_FIREWALL_WEBHOOK_DISPATCH_ENABLED"] = "false"
         os.environ["PAYMENT_FIREWALL_PAY_TO"] = _required_env("SETTLEMENT_TO")
         from app import main, webhooks_api
+
+        if main.POSTGRES_DSN or Path(main.DB_URL).resolve() != isolated_db_path:
+            raise RuntimeError("golden-path database isolation check failed")
 
         main.reset_runtime_state()
         webhooks_api.reset_webhook_sender_for_tests()
@@ -417,10 +451,8 @@ def run() -> int:
             print("settlement=RPC_VERIFIED")
             print(f"transaction_hash={chain_evidence['transaction_hash']}")
             print(f"explorer_url={chain_evidence['explorer_url']}")
-            print(
-                "historical_replay_notice="
-                "RPC_VERIFIED_TRANSACTION_NOT_BROADCAST_BY_THIS_DEMO"
-            )
+            settlement_notice, circle_policy = _settlement_notice_lines(mode)
+            print(settlement_notice)
             print(
                 f"demo_evidence_bundle={json.dumps(demo_evidence_bundle, sort_keys=True)}"
             )
@@ -432,7 +464,7 @@ def run() -> int:
                 f"category={denied_payload['context']['payment_intent']['service_category'] == allowed_payload['context']['payment_intent']['service_category']} "
                 f"counterparty={denied_payload['vendor'] == allowed_payload['vendor']}"
             )
-            print("CIRCLE_POLICY=NOT_INVOKED_IN_RPC_REPLAY")
+            print(circle_policy)
             calls_before_denial = settlement.calls
             denied_response = _authorize(
                 client,

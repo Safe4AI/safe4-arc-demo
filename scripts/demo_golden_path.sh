@@ -3,11 +3,15 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Keep explicit caller overrides while loading committed, non-secret replay
+# defaults. This makes the same command usable for historical EOA evidence and
+# fresh Circle Agent Wallet (ERC-4337) evidence.
 declare -A caller_overrides=()
 override_names=(
   SAFE4_DEMO_MODE RPC_URL CHAIN_ID USDC_ADDRESS USDC_DECIMALS
   ARC_ENTRYPOINT_ADDRESS ARC_NATIVE_USDC_ADDRESS ARC_NATIVE_USDC_DECIMALS
   SETTLEMENT_TX SETTLEMENT_FROM SETTLEMENT_TO SETTLEMENT_AMOUNT_UNITS
+  SETTLEMENT_IDEMPOTENCY_KEY
 )
 for name in "${override_names[@]}"; do
   if [[ -v "$name" ]]; then

@@ -6,13 +6,21 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MD_FILES = sorted(ROOT.rglob("*.md"))
+IGNORED_PARTS = {".git", ".tmp", ".python313", ".venv", "node_modules", "__pycache__"}
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 FORBIDDEN_RE = [
     re.compile(r"(?i)\bc:\\"),
     re.compile(r"(?i)/c:/"),
     re.compile(r"(?i)file://"),
 ]
+
+
+def markdown_files(root: Path = ROOT) -> list[Path]:
+    return sorted(
+        path
+        for path in root.rglob("*.md")
+        if not any(part in IGNORED_PARTS for part in path.relative_to(root).parts)
+    )
 
 
 def iter_relative_links(text: str) -> list[str]:
@@ -31,14 +39,25 @@ def iter_relative_links(text: str) -> list[str]:
 
 def resolve_target(md_file: Path, target: str) -> Path:
     normalized = target.split("#", 1)[0]
-    return (md_file.parent / normalized).resolve()
+    local_target = (md_file.parent / normalized).resolve()
+    if local_target.exists():
+        return local_target
+
+    # Files under public-demo are an overlay copied to the root of the prepared
+    # public repository. Validate their links against the corresponding source
+    # paths when those paths are deliberately supplied by the export manifest.
+    relative = md_file.relative_to(ROOT)
+    if relative.parts and relative.parts[0] == "public-demo":
+        return (ROOT / normalized).resolve()
+    return local_target
 
 
 def main() -> int:
     issues: list[str] = []
     fixed_links = 0
+    md_files = markdown_files()
 
-    for md_file in MD_FILES:
+    for md_file in md_files:
         text = md_file.read_text(encoding="utf-8")
         rel_path = md_file.relative_to(ROOT)
 
@@ -52,7 +71,7 @@ def main() -> int:
                 issues.append(f"{rel_path}: broken relative link `{target}`")
 
     print("Documentation check summary")
-    print(f"- markdown files scanned: {len(MD_FILES)}")
+    print(f"- markdown files scanned: {len(md_files)}")
     print(f"- fixed links: {fixed_links}")
     print(f"- issues found: {len(issues)}")
 

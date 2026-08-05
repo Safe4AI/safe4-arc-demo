@@ -1,0 +1,33 @@
+{
+  "candidates": [],
+  "decision": "NO_GO",
+  "max_amount_usdc": "0.010000",
+  "mode": "READ_ONLY_ESTIMATE",
+  "observed_date_utc": "2026-07-28",
+  "reason_codes": [
+    "NO_EXACT_ARC_GATEWAY_SERVICE"
+  ],
+  "requested_chain": "ARC-TESTNET",
+  "required_network": "eip155:5042002",
+  "safety": {
+    "allowed_cli_operations": [
+      "services search",
+      "services inspect",
+      "services pay --estimate"
+    ],
+    "deposit_executed": false,
+    "payment_executed": false,
+    "payment_mode": "estimate_only"
+  },
+  "schema_version": "safe4-circle-marketplace-admission-v1",
+  "summary": {
+    "admitted_candidates": 0,
+    "duplicate_resources": 10,
+    "exact_arc_gateway_services": 0,
+    "exact_arc_services": 0,
+    "gateway_services": 245,
+    "inspected_candidates": 0,
+    "near_match_wrong_arc_network": 0,
+    "services_scanned": 470
+  }
+}

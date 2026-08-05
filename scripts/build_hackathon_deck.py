@@ -342,7 +342,7 @@ def build_deck() -> Presentation:
         slide,
         6,
         "Observed evidence",
-        "Arcscan: testnet.arcscan.app/tx/0x648ef1…7752c · ERC-4337 verifier: scripts/verify_arc_settlement.py",
+        "Arcscan: testnet.arcscan.app/tx/0xf9d665…e775d · ERC-4337 verifier: scripts/verify_arc_settlement.py",
     )
     add_title(slide, "Observed output", "Real demo. Real reasons. Real chain evidence.")
     add_rect(slide, 0.44, 2.72, 5.92, 2.62, fill=PANEL, stroke=GREEN, width=1.4)
@@ -357,7 +357,7 @@ def build_deck() -> Presentation:
     add_text(slide, "DEMO ORCHESTRATOR DID NOT INVOKE EXECUTOR", 7.22, 4.78, 5.08, 0.25, size=9.2, fill=RED, bold=True)
     add_rect(slide, 0.44, 5.75, 12.42, 0.7, fill=PANEL_2, stroke=LINE)
     add_text(slide, "RPC-VERIFIED CIRCLE AGENT WALLET TX", 0.67, 5.97, 2.35, 0.2, size=8.1, fill=YELLOW, bold=True)
-    add_text(slide, "0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c", 3.06, 5.91, 9.12, 0.28, size=9.2, fill=WHITE, font=MONO)
+    add_text(slide, "0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d", 3.06, 5.91, 9.12, 0.28, size=9.2, fill=WHITE, font=MONO)
 
     # 07 — Arc / Circle rationale
     slide = deck.slides.add_slide(blank)
@@ -408,9 +408,9 @@ def build_deck() -> Presentation:
 
     # 10 — Progress / roadmap
     slide = deck.slides.add_slide(blank)
-    add_base(slide, 10, "Progress + accelerator path", "Public repo: github.com/Safe4AI/safe4-arc-demo · evidence current at 28 Jul 2026")
+    add_base(slide, 10, "Progress + accelerator path", "Public repo: github.com/Safe4AI/safe4-arc-demo · evidence current at 5 Aug 2026")
     add_title(slide, "Roadmap", "From verified demo to agent-commerce service")
-    add_panel(slide, 0.44, 2.75, 3.75, 2.85, label="Now / Verified", title="Hackathon proof", body="293-test regression gate. Fresh Circle Agent Wallet settlement on Arc. Unattended allow/deny demo. Public repository.", accent=GREEN)
+    add_panel(slide, 0.44, 2.75, 3.75, 2.85, label="Now / Verified", title="Hackathon proof", body="Python 3.13 regression gate. 5 August Circle Agent Wallet settlement on Arc. Unattended allow/deny demo. Public repository.", accent=GREEN)
     add_panel(slide, 4.79, 2.75, 3.75, 2.85, label="Next / Harden", title="Trusted context", body="Bind tasks to principals, remove legacy bypasses, harden the x402 verifier boundary, and complete security review.", accent=YELLOW)
     add_panel(slide, 9.14, 2.75, 3.75, 2.85, label="After / Distribute", title="Agent service", body="Package Safe4 as an x402 service, complete security review, and apply for Circle Agent Marketplace listing.", accent=CYAN)
     add_text(slide, "THE ACCELERATOR UNLOCKS", 0.47, 6.02, 2.3, 0.25, size=9, fill=YELLOW, bold=True)

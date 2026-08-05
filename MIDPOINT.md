@@ -11,16 +11,10 @@ allowed, and records the reason and evidence for the decision.
 - FastAPI frontend and backend with a judge-facing agent-security demo
 - budgets, velocity controls, approval workflows, receipts, audit evidence,
   x402 and AP2 protocol machinery
-- Python 3.13 regression gate: 286 passing tests
+- Python 3.13 regression gate: 270 passing tests
 - real USDC settlement on Arc Testnet
 - transaction-specific RPC verification of chain, token, participants, amount,
   calldata, receipt status, and `Transfer` event
-- one-command Safe4 golden path with task-matching ALLOWED and purpose-mismatch
-  DENIED decisions
-- deterministic matching against request-supplied task context, with structured
-  reasons and an explicit trust-boundary disclosure
-- optional Circle Agent Stack adapter coded to attempt execution after ALLOWED;
-  authenticated validation is pending
 
 ## Arc evidence
 
@@ -31,17 +25,16 @@ allowed, and records the reason and evidence for the decision.
 
 ## Work toward final submission — 9 August 2026
 
-1. Authenticate a Circle Arc Testnet Agent Wallet and capture a fresh,
-   post-authorization live transfer.
-2. Bind task context to a trusted principal and remove the documented legacy
-   justification compatibility path.
-3. Rehearse and record the prepared three-minute video.
-4. Complete independent claim audit, then update the human-controlled final
-   submission.
+1. Replace the x402 synthetic settlement proof with an RPC-confirmed Arc USDC
+   transaction before payment finalization.
+2. Replace the current keyword intent heuristic with genuine task-to-payment
+   matching.
+3. Produce a one-command golden path showing one allowed and one differentiated
+   denied payment with legible reasons.
+4. Deploy the demo, record the three-minute video, and complete the deck.
 
 ## Honest limitation
 
-The default golden path uses a real, RPC-verified historical Arc transaction and
-labels it as replay evidence. It does not claim the replay command broadcast a
-fresh transfer. The Circle live adapter is implemented, but fresh execution
-still requires a human-authenticated testnet Circle session.
+The verified Arc transaction currently proves the chain and signing path outside
+the Safe4 service. It does not yet prove that the service itself initiated that
+settlement. The final build will not claim otherwise.

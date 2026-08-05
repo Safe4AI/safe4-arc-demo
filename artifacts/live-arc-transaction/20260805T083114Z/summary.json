@@ -1,0 +1,49 @@
+{
+  "circle_history": {
+    "operation": "TRANSFER",
+    "state": "COMPLETE",
+    "transaction_hash": "0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d"
+  },
+  "denied_control": {
+    "executor_calls_after": 1,
+    "executor_calls_before": 1,
+    "reason_code": "PURCHASE_PURPOSE_MISMATCH",
+    "settlement_invoked": false,
+    "verdict": "DENIED"
+  },
+  "live_settlement": {
+    "amount_units": 10000,
+    "amount_usdc": "0.010000",
+    "block_number": 55411369,
+    "block_timestamp_utc": "2026-08-05T08:30:05Z",
+    "broadcast": "SUBMITTED_AFTER_SAFE4_ALLOW",
+    "chain": "ARC-TESTNET",
+    "chain_id": 5042002,
+    "execution_path": "ERC_4337_AGENT_WALLET",
+    "explorer_url": "https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d",
+    "recipient": "0x530271DA8CC4e44375f22ad9632bC61A55382f88",
+    "rpc_verified": true,
+    "sender": "0x3985a31e4e42a31e437c1099306decbe2f08da4d",
+    "transaction_hash": "0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d"
+  },
+  "observations": {
+    "post_transfer_balance_usdc": "19.98",
+    "pre_transfer_balance_usdc": "19.99"
+  },
+  "review": {
+    "independent_verdict": "PASS"
+  },
+  "run_id": "20260805T083114Z",
+  "safe4_authorization": {
+    "reason_code": "TASK_PURCHASE_MATCH",
+    "task_context_trust": "request-supplied-untrusted",
+    "verdict": "ALLOWED"
+  },
+  "schema_version": "safe4-live-arc-evidence-v1",
+  "source_revision": "unversioned snapshot",
+  "tests": {
+    "command": ".\\.python313\\python.exe -m pytest -q tests\\test_demo_golden_path.py tests\\test_arc_settlement_verifier.py",
+    "passed": 18,
+    "warnings": 1
+  }
+}

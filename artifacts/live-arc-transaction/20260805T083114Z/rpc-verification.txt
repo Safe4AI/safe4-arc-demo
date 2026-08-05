@@ -1,0 +1,5 @@
+Command:
+.\.python313\python.exe -m scripts.verify_arc_settlement --mode circle-agent-wallet --rpc-url https://rpc.testnet.arc.network --chain-id 5042002 --usdc-address 0x3600000000000000000000000000000000000000 --tx-hash 0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d --sender 0x3985a31e4e42a31e437c1099306decbe2f08da4d --recipient 0x530271DA8CC4e44375f22ad9632bC61A55382f88 --amount-units 10000 --usdc-decimals 6 --entrypoint-address 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789 --native-usdc-address 0xfffffffffffffffffffffffffffffffffffffffe --native-usdc-decimals 18
+
+Exit code: 0
+ARC_SETTLEMENT_OK mode=circle-agent-wallet tx=0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d from=0x3985a31e4e42a31e437c1099306decbe2f08da4d to=0x530271DA8CC4e44375f22ad9632bC61A55382f88 amount_units=10000 block=55411369
