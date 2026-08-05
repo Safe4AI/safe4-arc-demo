@@ -176,10 +176,16 @@ Open:
 - operator console:
   <http://localhost:8090/demo/console?access_token=safe4-local-demo>
 
-The x402 decision lab connects a least-privilege demo agent and exercises the
-real `/pay` challenge/retry path for one matching and one mismatched purchase.
-Its guarded receipt is explicitly scaffolded; the browser does not receive a
-wallet key or admin credential and does not broadcast a fresh transaction.
+The x402 decision lab connects a least-privilege demo agent and exercises six
+predeclared scenarios through the real local `/pay` challenge/retry path:
+task-matched purchase, three independent service authorizations, intent and
+autonomy-scope denials, receipt replay, and idempotent retry. Its guarded
+receipt is explicitly scaffolded; the browser does not receive a wallet key or
+admin credential and does not broadcast a fresh transaction. The three-service
+case is sequential and non-atomic, not a native multisend or Gateway batch.
+
+Use the [judge demo runbook](docs/hackathon/JUDGE_DEMO_RUNBOOK.md) for a
+90-second walkthrough and the exact evidence boundaries.
 
 ![Safe4 x402 decision lab](artifacts/safe4-x402-demo.png)
 

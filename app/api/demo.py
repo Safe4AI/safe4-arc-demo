@@ -9,6 +9,8 @@ from fastapi import APIRouter, Header, HTTPException, Query, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from .demo_x402_ui import X402_DEMO_HTML
+
 
 router = APIRouter()
 _demo_access_token: str | None = None
@@ -650,7 +652,9 @@ CONSOLE_HTML = """<!DOCTYPE html>
 """
 
 
-X402_DEMO_HTML = """<!DOCTYPE html>
+# Kept temporarily as a migration reference while the judge-facing page lives
+# in ``demo_x402_ui.py``. It is never served.
+_LEGACY_X402_DEMO_HTML = """<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />

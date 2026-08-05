@@ -71,7 +71,7 @@ def test_browser_demo_contract_runs_real_allow_and_deny_paths() -> None:
                 payload = {
                     "agent_id": "agent_alpha",
                     "user_id": "user_123",
-                    "vendor": "circle_marketplace_company_research",
+                    "vendor": "demo_company_research_api",
                     "amount": 0.01,
                     "currency": "USDC",
                     "description": purpose,

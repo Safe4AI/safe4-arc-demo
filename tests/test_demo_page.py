@@ -80,24 +80,66 @@ class DemoPageTests(unittest.TestCase):
         self.assertIn("Blocked High-Risk Transfer", response.text)
         self.assertIn("Live Safe4 Signals", response.text)
 
-    def test_x402_demo_page_is_served_with_restrained_live_flow(self) -> None:
+    def test_x402_demo_page_is_served_with_judge_facing_scenario_contract(self) -> None:
         with TestClient(main.app) as client:
             response = client.get("/demo/x402?access_token=demo-team-token")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Should this agent pay?", response.text)
+        self.assertIn("See every payment decision.", response.text)
         self.assertIn("Connect demo agent", response.text)
-        self.assertIn("Matching purpose", response.text)
-        self.assertIn("Mismatched purpose", response.text)
-        self.assertIn('fetch("/pay"', response.text)
-        self.assertIn('fetch("/demo/x402/receipt"', response.text)
-        self.assertIn("no fresh broadcast", response.text)
-        self.assertNotIn("X-Admin-Secret", response.text)
-        self.assertNotIn("ARC_PRIVATE_KEY", response.text)
-        self.assertNotIn("demo-local-receipt-only", response.text)
+        for scenario_label in (
+            "Task-matched purchase",
+            "3-call agent batch",
+            "Wrong purchase purpose",
+            "Scope cap exceeded",
+            "Used receipt replay",
+            "Idempotent duplicate",
+        ):
+            with self.subTest(scenario_label=scenario_label):
+                self.assertIn(scenario_label, response.text)
+
+        for boundary_text in (
+            "Local /pay live",
+            "Guarded receipt fixture",
+            "Browser broadcasts 0",
+            "Separate live Arc Testnet evidence",
+            "Running the browser lab never creates another transaction.",
+            "Batch means independent requests, not atomic settlement.",
+        ):
+            with self.subTest(boundary_text=boundary_text):
+                self.assertIn(boundary_text, response.text)
+
+        for endpoint in (
+            'fetch("/oauth/authorize"',
+            'fetch("/oauth/token"',
+            'fetch("/x402/capabilities"',
+            'fetch("/pay"',
+            'fetch("/demo/x402/receipt"',
+        ):
+            with self.subTest(endpoint=endpoint):
+                self.assertIn(endpoint, response.text)
+
+        self.assertIn("JSON.stringify(canonicalJson(first.body))", response.text)
+        self.assertIn("JSON.stringify(canonicalJson(second.body))", response.text)
+
+        for forbidden_text in (
+            "Circle Marketplace",
+            "circle_marketplace_company_research",
+            "X-Admin-Secret",
+            "ARC_PRIVATE_KEY",
+            "CIRCLE_API_KEY",
+            "demo-local-receipt-only",
+            "demo-team-token",
+        ):
+            with self.subTest(forbidden_text=forbidden_text):
+                self.assertNotIn(forbidden_text, response.text)
+
         self.assertEqual(response.headers["cache-control"], "no-store")
         self.assertEqual(response.headers["referrer-policy"], "no-referrer")
-        self.assertIn("frame-ancestors 'none'", response.headers["content-security-policy"])
+        content_security_policy = response.headers["content-security-policy"]
+        self.assertIn("connect-src 'self'", content_security_policy)
+        self.assertIn("form-action 'none'", content_security_policy)
+        self.assertIn("frame-ancestors 'none'", content_security_policy)
 
     def test_demo_pages_are_hidden_without_access_token(self) -> None:
         with TestClient(main.app) as client:

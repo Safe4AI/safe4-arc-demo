@@ -227,6 +227,35 @@ with deliberately wrong inherited PostgreSQL, database-path, and demo-token
 settings; it ignored them and served from isolated temporary SQLite at the
 printed URL.
 
+### 5 August judge-lab expansion
+
+The browser interface was expanded to six predeclared local authorization
+scenarios and rendered at 1440 pixels in a real headless Edge session. The
+browser driver connected through OAuth PKCE, selected each visible scenario,
+clicked the same controls a judge uses, and observed:
+
+```text
+single_allow=Allow/TASK_PURCHASE_MATCH
+batch_allow=3 Allowed/INDEPENDENT_AUTHORIZATIONS
+intent_deny=Deny/PURCHASE_PURPOSE_MISMATCH
+scope_deny=Deny/SCOPE_OF_AUTONOMY_MAX_COST_EXCEEDED
+receipt_replay=Blocked/PAYMENT_RECEIPT_ALREADY_USED
+idempotent_retry=Safe Retry/OBSERVED: TASK_PURCHASE_MATCH
+```
+
+Focused Python 3.13 verification reported:
+
+```text
+16 passed, 7 warnings, 24 subtests passed in 14.64s
+```
+
+The six backend cases each ran in a fresh subprocess with an isolated SQLite
+database and external paths disabled. The browser result is captured in
+`artifacts/safe4-x402-demo.png`. It remains authorization-only: the three-call
+case is sequential and non-atomic, every guarded receipt audit recorded
+`broadcast=false` and `rpc_verified=false`, and no wallet or settlement
+executor was connected.
+
 ## Transaction edge-case evidence candidate
 
 Observed locally on 5 August 2026 from an explicitly labelled unversioned

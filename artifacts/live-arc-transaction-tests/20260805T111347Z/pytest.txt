@@ -1,0 +1,11 @@
+Command:
+.\.python313\python.exe -m pytest -q tests\test_demo_golden_path.py tests\test_arc_settlement_verifier.py tests\test_intent_semantic.py
+
+Python: 3.13.14
+Exit code: 0
+.........................                                                [100%]
+25 passed, 1 warning in 0.42s
+
+Warning category retained: StarletteDeprecationWarning from FastAPI TestClient.
+The warning path was omitted because it contains a local user/workspace path
+and does not affect the verdict.
