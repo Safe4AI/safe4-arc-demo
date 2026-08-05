@@ -103,8 +103,11 @@ class DemoPageTests(unittest.TestCase):
             "Guarded receipt fixture",
             "Browser broadcasts 0",
             "Separate live Arc Testnet evidence",
+            "Latest guarded batch: 3/3 sequential transfers RPC-verified, totaling 0.006 USDC to one reviewed recipient.",
             "Running the browser lab never creates another transaction.",
             "Batch means independent requests, not atomic settlement.",
+            "artifacts/live-arc-batch/20260805T123013Z",
+            "0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27",
         ):
             with self.subTest(boundary_text=boundary_text):
                 self.assertIn(boundary_text, response.text)

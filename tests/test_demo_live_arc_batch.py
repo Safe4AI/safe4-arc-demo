@@ -32,6 +32,7 @@ from scripts.demo_live_arc_batch import (
     VerificationResult,
     assert_single_bound_outgoing_transfer,
     assert_single_successful_bound_user_operation,
+    build_circle_cli_environment,
     build_circle_transfer_command,
     prepare_batch,
 )
@@ -591,10 +592,28 @@ def test_circle_command_uses_only_bound_item_not_settlement_environment() -> Non
     with patch.dict(
         os.environ,
         {
+            "Path": "C:\\Windows\\System32",
+            "SystemRoot": "C:\\Windows",
+            "APPDATA": "C:\\Users\\demo\\AppData\\Roaming",
+            "USERPROFILE": "C:\\Users\\demo",
             "SETTLEMENT_TO": RECIPIENT_C,
             "SETTLEMENT_AMOUNT_UNITS": "999999999",
             "SETTLEMENT_IDEMPOTENCY_KEY": str(UUID(int=999, version=4)),
+            "PAYMENT_FIREWALL_ADMIN_SECRET": "unsafe-safe4-secret",
+            "SAFE4_PROVIDER_RANGE_RISK_API_KEY": "unsafe-provider-secret",
+            "CIRCLE_ACCESS_TOKEN": "unsafe-circle-token",
+            "WALLET_PRIVATE_KEY": "unsafe-private-key",
+            "HTTP_PROXY": "http://attacker.invalid",
+            "HTTPS_PROXY": "http://attacker.invalid",
+            "ALL_PROXY": "http://attacker.invalid",
+            "NO_PROXY": "*",
+            "SSL_CERT_FILE": "C:\\attacker\\ca.pem",
+            "REQUESTS_CA_BUNDLE": "C:\\attacker\\ca.pem",
+            "NODE_OPTIONS": "--require=C:\\attacker\\inject.js",
+            "NODE_PATH": "C:\\attacker\\modules",
+            "NODE_EXTRA_CA_CERTS": "C:\\attacker\\ca.pem",
         },
+        clear=True,
     ):
         result = port.submit(bound)
 
@@ -617,6 +636,40 @@ def test_circle_command_uses_only_bound_item_not_settlement_environment() -> Non
     assert kwargs["check"] is False
     assert kwargs["capture_output"] is True
     assert kwargs["text"] is True
+    assert kwargs["env"] == {
+        "APPDATA": "C:\\Users\\demo\\AppData\\Roaming",
+        "PATH": "C:\\Windows\\System32",
+        "SYSTEMROOT": "C:\\Windows",
+        "USERPROFILE": "C:\\Users\\demo",
+    }
+
+
+def test_circle_environment_allowlist_excludes_configuration_and_injection() -> None:
+    source = {
+        "PATH": "safe-path",
+        "PATHEXT": ".COM;.EXE;.BAT;.CMD",
+        "WINDIR": "C:\\Windows",
+        "COMSPEC": "C:\\Windows\\System32\\cmd.exe",
+        "LOCALAPPDATA": "C:\\Users\\demo\\AppData\\Local",
+        "PAYMENT_FIREWALL_RECEIPT_SECRET": "forbidden",
+        "SAFE4_PROVIDER_RANGE_RISK_API_KEY": "forbidden",
+        "API_TOKEN": "forbidden",
+        "PRIVATE_KEY": "forbidden",
+        "HTTP_PROXY": "forbidden",
+        "SSL_CERT_DIR": "forbidden",
+        "NODE_OPTIONS": "forbidden",
+        "NODE_EXTRA_CA_CERTS": "forbidden",
+        "HOME": "forbidden-runtime-override",
+        "LANG": "forbidden-locale-override",
+    }
+
+    assert build_circle_cli_environment(source) == {
+        "PATH": "safe-path",
+        "PATHEXT": ".COM;.EXE;.BAT;.CMD",
+        "WINDIR": "C:\\Windows",
+        "COMSPEC": "C:\\Windows\\System32\\cmd.exe",
+        "LOCALAPPDATA": "C:\\Users\\demo\\AppData\\Local",
+    }
 
 
 def test_circle_confirmed_state_proceeds_to_rpc_verification() -> None:
@@ -1070,7 +1123,7 @@ def test_rpc_propagation_poll_returns_unknown_without_resubmission() -> None:
     )
     transaction_hash = "0x" + ("a" * 64)
     with (
-        patch("httpx.Client", return_value=FakeHttpClient()),
+        patch("httpx.Client", return_value=FakeHttpClient()) as client_factory,
         patch("scripts.verify_arc_settlement.rpc", side_effect=fake_rpc) as rpc_call,
     ):
         result = verifier.verify(bound, transaction_hash)
@@ -1080,6 +1133,7 @@ def test_rpc_propagation_poll_returns_unknown_without_resubmission() -> None:
     assert result.transaction_hash == transaction_hash
     assert sleeps == [0.25, 0.25]
     assert rpc_call.call_count == 7  # chain plus two reads for each of 3 attempts
+    client_factory.assert_called_once_with(timeout=15.0, trust_env=False)
 
 
 def test_arc_verifier_constructor_hardens_chain_specific_inputs() -> None:

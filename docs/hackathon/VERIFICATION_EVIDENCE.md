@@ -189,6 +189,54 @@ Arc Testnet only and does not establish principal-bound task context,
 exactly-once external settlement, production readiness, or chain-wide
 prevention.
 
+## 5 August 2026 independently reviewed sequential live batch
+
+The sanitized
+[`20260805T123013Z` evidence bundle](../../artifacts/live-arc-batch/20260805T123013Z/README.md)
+records three sequential, non-atomic Arc Testnet USDC transfers to one reviewed
+recipient after three local Safe4 `/pay` authorizations. Each transfer was Arc
+RPC verified before the next request was authorized:
+
+| Item | Safe4 result | Amount | Arc block | Transaction |
+|---|---|---:|---:|---|
+| market-data | `AUTHORIZED` / `TASK_PURCHASE_MATCH` | 0.001 USDC | `55439625` | [`0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145`](https://testnet.arcscan.app/tx/0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145) |
+| compute | `AUTHORIZED` / `TASK_PURCHASE_MATCH` | 0.002 USDC | `55439642` | [`0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d`](https://testnet.arcscan.app/tx/0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d) |
+| agent-memory | `AUTHORIZED` / `TASK_PURCHASE_MATCH` | 0.003 USDC | `55439658` | [`0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27`](https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27) |
+
+```text
+run_id=20260805T123013Z
+source_revision=a2831a76e37e0e45e1d3e5d142484af5d2d12c63
+execution_model=SEQUENTIAL_NON_ATOMIC_STOP_ON_FIRST_FAILURE
+amounts_usdc=0.001,0.002,0.003
+total_amount_usdc=0.006
+planned=3
+authorized=3
+submitted=3
+rpc_verified=3
+failed=0
+unknown=0
+independent_verdict=PASS_BOUNDED_CLAIM
+bundle_secret_findings=0
+```
+
+The independent reviewer reproduced all three exact-hash RPC verifications,
+matched authenticated Circle history in `COMPLETE` state, confirmed the exact
+`0.006 USDC` sender/recipient balance deltas, and found zero bundle secrets.
+The verdict is limited to the bounded result above.
+
+The Safe4 receipt route was a local fixture and task context was
+request-supplied. This is not evidence of a native multisend, Circle Gateway
+integration, three paid external x402 endpoints, or exactly-once settlement.
+The verifier did not decode complete UserOperation calldata, so the bundle does
+not prove the absence of unrelated non-USDC effects inside an operation.
+
+At execution revision `a2831a76e37e0e45e1d3e5d142484af5d2d12c63`, Circle
+child processes inherited the wrapper's ephemeral fixture environment and
+HTTPX used default environment trust. The bundle records a post-run name-only
+check that found no proxy, custom-CA, or Circle-proxy variable in the parent
+environment. Later source hardening is not attributed retroactively to this
+execution.
+
 ## Browser x402 decision lab candidate
 
 Observed locally on 28 July 2026 after the presentation frontend and its
@@ -281,6 +329,20 @@ prepared_public_files=148
 prepared_public_secrets=0
 prepared_public_forbidden=0
 ```
+
+After adding the independently reviewed sequential batch, its post-run source
+hardening, and the refreshed judge UI, the exact prepared publication package
+was rebuilt and checked again:
+
+```text
+prepared_public_full=447 passed, 7 warnings, 27 subtests passed
+prepared_public_markdown=29 files, 0 issues
+prepared_public_files=175
+prepared_public_secrets=0
+prepared_public_forbidden=0
+```
+
+This is the local publication-candidate gate, not a GitHub Actions result.
 
 All required denied, invalid, challenged, conflicting, and rate-limited steps
 added no recorded spend. T08, T10, and T11 each include an earlier successful

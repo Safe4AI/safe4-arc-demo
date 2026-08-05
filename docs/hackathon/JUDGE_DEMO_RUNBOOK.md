@@ -57,12 +57,41 @@ The Arcscan links at the bottom are separately labelled historical Arc Testnet
 evidence. Opening a link is read-only and running any browser scenario does not
 create another transfer.
 
+### Optional independently reviewed live evidence
+
+If a judge asks whether the three-service shape has also been exercised on
+chain, open the read-only
+[`20260805T123013Z` evidence bundle](../../artifacts/live-arc-batch/20260805T123013Z/README.md).
+It records three sequential, non-atomic Arc Testnet USDC transfers to one
+reviewed recipient after three local Safe4 `/pay` authorizations:
+
+- `0.001 USDC`, block `55439625`,
+  [`0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145`](https://testnet.arcscan.app/tx/0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145)
+- `0.002 USDC`, block `55439642`,
+  [`0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d`](https://testnet.arcscan.app/tx/0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d)
+- `0.003 USDC`, block `55439658`,
+  [`0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27`](https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27)
+
+The independently reproduced verdict is `PASS` for this bounded `0.006 USDC`
+run only. The local receipt route was a fixture and task context was
+request-supplied. Do not present it as a native multisend, Circle Gateway
+integration, three paid external x402 endpoints, or exactly-once settlement.
+The verifier did not decode complete UserOperation calldata. The execution
+revision also retained environment-hardening limitations documented in the
+bundle; later hardening is not evidence about that earlier execution.
+
 ## Judge-safe narration
 
 > Safe4 just evaluated three independent service-payment requests through the
 > real local authorization path. It allowed the task-matched requests and
 > exposed the exact denial or replay reason for each control. The browser made
 > zero broadcasts; the Arc links are separate historical testnet evidence.
+
+For the optional live evidence, say:
+
+> Separately, an independently reviewed historical run recorded three
+> sequential, non-atomic Arc Testnet transfers totaling 0.006 USDC to one
+> reviewed recipient after three local Safe4 authorizations.
 
 Avoid the phrases "native multisend," "atomic batch," "Circle Gateway
 integration," "live x402 settlement," and "exactly-once settlement."

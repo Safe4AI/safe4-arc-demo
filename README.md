@@ -13,7 +13,7 @@ As of 5 August 2026:
 
 - the FastAPI payment-firewall service and its policy, approval, receipt, audit,
   AP2, x402, MCP-governance, and anomaly-control paths are implemented
-- the prepared public repository passes 370 Python 3.13 tests
+- the prepared public repository passes 447 Python 3.13 tests plus 27 subtests
 - an independently reviewed local edge-case run passed all 22 predeclared
   authorization scenarios and all eight settlement-verifier fixtures; all
   three adversarial intent/counterparty canaries were authorized and remain
@@ -29,6 +29,9 @@ As of 5 August 2026:
   explicitly configured payment destination
 - an authenticated Circle Agent Wallet settled `0.01` testnet USDC after
   Safe4 returned ALLOWED; the ERC-4337 receipt is RPC-verified
+- an independently reviewed fixed batch authorized three local requests, then
+  settled and RPC-verified three sequential Arc Testnet transfers totaling
+  `0.006 USDC` to one reviewed recipient
 
 The midpoint milestone was 27 July 2026. Integration runs 27–31 July,
 proof runs 1–8 August, and final submission is due 9 August 2026; the exact
@@ -188,6 +191,27 @@ Use the [judge demo runbook](docs/hackathon/JUDGE_DEMO_RUNBOOK.md) for a
 90-second walkthrough and the exact evidence boundaries.
 
 ![Safe4 x402 decision lab](artifacts/safe4-x402-demo.png)
+
+### Independently reviewed live batch evidence
+
+The browser's evidence lane links to a separate historical
+[`20260805T123013Z` bundle](artifacts/live-arc-batch/20260805T123013Z/README.md).
+That bounded run recorded three sequential, non-atomic Arc Testnet USDC
+transfers to one reviewed recipient after three local Safe4 `/pay`
+authorizations:
+
+| Demo item | Amount | Arc block | Transaction |
+|---|---:|---:|---|
+| Market data | 0.001 USDC | `55439625` | [`0x0f15…6145`](https://testnet.arcscan.app/tx/0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145) |
+| Compute | 0.002 USDC | `55439642` | [`0x29df…ce4d`](https://testnet.arcscan.app/tx/0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d) |
+| Agent memory | 0.003 USDC | `55439658` | [`0x80cb…4a27`](https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27) |
+
+The independent verdict was `PASS` for this bounded claim. The receipt route
+was a local fixture and task context was request-supplied. This was not a
+native multisend, Circle Gateway integration, or three paid external x402
+endpoints, and it does not prove exactly-once external settlement. The verifier
+did not decode complete UserOperation calldata, so it does not prove the
+absence of unrelated non-USDC effects inside an operation.
 
 The application defaults are for local development only. Production-like
 deployments must provide explicit secrets, persistence, and recipient

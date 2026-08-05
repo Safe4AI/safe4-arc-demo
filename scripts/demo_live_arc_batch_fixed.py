@@ -52,6 +52,7 @@ from scripts.demo_live_arc_batch import (
     LocalSafe4AuthorizationPort,
     LiveArcBatchCoordinator,
     ArcRpcVerificationPort,
+    build_circle_cli_environment,
     prepare_batch,
 )
 
@@ -64,6 +65,7 @@ FIXED_AMOUNT_UNITS = (1_000, 2_000, 3_000)
 FIXED_TOTAL_UNITS = sum(FIXED_AMOUNT_UNITS)
 FIXED_TASK = "Research competitor pricing using paid company data services."
 MIN_PREFLIGHT_SENDER_BALANCE_BASE_UNITS = 100_000_000_000_000_000
+SUPPORTED_CIRCLE_CLI_VERSION = "0.0.6"
 
 # The long, exact string makes accidental execution from copied flags less
 # likely.  It confirms only this source-reviewed plan; it is not a secret.
@@ -146,13 +148,17 @@ class FixedRunEvidence:
             raise FixedBatchSafetyError("SOURCE_REVISION_INVALID")
         if self.source_worktree_state != "CLEAN":
             raise FixedBatchSafetyError("SOURCE_WORKTREE_NOT_CLEAN")
-        if not _CLI_VERSION_PATTERN.fullmatch(self.circle_cli_version):
-            raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_INVALID")
+        _assert_supported_circle_cli_version(self.circle_cli_version)
         wallet_preflight = _validated_wallet_preflight(
             self.circle_wallet_preflight
         )
         pre = _validated_public_balance_observation(self.pre_balances)
         post = _validated_public_balance_observation(self.post_balances)
+        if pre["stage"] != "PRE":
+            raise FixedBatchSafetyError("PUBLIC_BALANCE_PRE_STAGE_INVALID")
+        _assert_required_preflight_balance(pre)
+        if post["stage"] != "POST":
+            raise FixedBatchSafetyError("PUBLIC_BALANCE_POST_STAGE_INVALID")
         return {
             "schema_version": "safe4-live-arc-fixed-run-evidence-v1",
             "started_at_utc": self.started_at_utc,
@@ -162,8 +168,9 @@ class FixedRunEvidence:
                 "worktree_state": self.source_worktree_state,
             },
             "circle_cli": {
-                "package": "@circle-fin/cli",
-                "version": self.circle_cli_version,
+                "command": "circle --version",
+                "command_reported_version": self.circle_cli_version,
+                "version_independently_verified": False,
                 "raw_command_output_retained": False,
                 "authenticated_wallet_preflight": wallet_preflight,
             },
@@ -960,6 +967,14 @@ def _parse_circle_cli_version(raw_output: str) -> str:
     return unique.pop()
 
 
+def _assert_supported_circle_cli_version(version: str) -> str:
+    if not isinstance(version, str) or not _CLI_VERSION_PATTERN.fullmatch(version):
+        raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_INVALID")
+    if version != SUPPORTED_CIRCLE_CLI_VERSION:
+        raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_UNSUPPORTED")
+    return version
+
+
 def observe_circle_cli_version(
     circle_executable: str,
     *,
@@ -974,12 +989,15 @@ def observe_circle_cli_version(
             capture_output=True,
             text=True,
             timeout=15,
+            env=build_circle_cli_environment(),
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_UNAVAILABLE") from exc
     if getattr(completed, "returncode", 1) != 0:
         raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_UNAVAILABLE")
-    return _parse_circle_cli_version(str(getattr(completed, "stdout", "")))
+    return _assert_supported_circle_cli_version(
+        _parse_circle_cli_version(str(getattr(completed, "stdout", "")))
+    )
 
 
 def _validated_wallet_preflight(observation: Mapping[str, Any]) -> dict[str, Any]:
@@ -1041,6 +1059,7 @@ def verify_fixed_circle_wallet_preflight(
             capture_output=True,
             text=True,
             timeout=30,
+            env=build_circle_cli_environment(),
         )
     except (OSError, subprocess.SubprocessError) as exc:
         raise FixedBatchSafetyError("CIRCLE_WALLET_PREFLIGHT_UNAVAILABLE") from exc
@@ -1176,7 +1195,7 @@ class ArcPublicBalanceObserver:
         try:
             import httpx
 
-            with httpx.Client(timeout=15.0) as client:
+            with httpx.Client(timeout=15.0, trust_env=False) as client:
                 chain_raw = self._rpc(client, "eth_chainId", [], 1)
                 if not isinstance(chain_raw, str) or not re.fullmatch(
                     r"0x[0-9a-fA-F]+", chain_raw
@@ -1275,8 +1294,7 @@ def run_read_only_preflight(
     if not circle_executable:
         raise FixedBatchSafetyError("CIRCLE_CLI_NOT_FOUND")
     circle_version = circle_version_observer(circle_executable)
-    if not _CLI_VERSION_PATTERN.fullmatch(circle_version):
-        raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_INVALID")
+    _assert_supported_circle_cli_version(circle_version)
     wallet = _validated_wallet_preflight(wallet_observer(circle_executable))
     observer = balance_observer or ArcPublicBalanceObserver()
     pre_balance = _observe_balances_safely(observer, "PRE")
@@ -1292,8 +1310,9 @@ def run_read_only_preflight(
             "worktree_state": source.worktree_state,
         },
         "circle_cli": {
-            "package": "@circle-fin/cli",
-            "version": circle_version,
+            "command": "circle --version",
+            "command_reported_version": circle_version,
+            "version_independently_verified": False,
             "authenticated_wallet": wallet,
             "raw_command_output_retained": False,
         },
@@ -1441,6 +1460,7 @@ def _real_runtime_factory(
     if not circle_executable:
         raise FixedBatchSafetyError("CIRCLE_CLI_NOT_FOUND")
     circle_cli_version = observe_circle_cli_version(circle_executable)
+    _assert_supported_circle_cli_version(circle_cli_version)
     circle_wallet_preflight = verify_fixed_circle_wallet_preflight(
         circle_executable
     )
@@ -1540,8 +1560,7 @@ def execute_fixed_live_batch(
             with runtime_factory(plan, database_path) as runtime:
                 if not isinstance(runtime, RuntimeBundle):
                     raise FixedBatchSafetyError("LIVE_RUNTIME_INVALID")
-                if not _CLI_VERSION_PATTERN.fullmatch(runtime.circle_cli_version):
-                    raise FixedBatchSafetyError("CIRCLE_CLI_VERSION_INVALID")
+                _assert_supported_circle_cli_version(runtime.circle_cli_version)
                 wallet_preflight = _validated_wallet_preflight(
                     runtime.circle_wallet_preflight
                 )

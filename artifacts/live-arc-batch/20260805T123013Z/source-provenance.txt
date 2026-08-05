@@ -1,0 +1,30 @@
+Live Arc batch source provenance
+
+Repository: https://github.com/Safe4AI/safe4-arc-demo
+Branch: agent/live-arc-evidence
+Execution revision: a2831a76e37e0e45e1d3e5d142484af5d2d12c63
+Worktree state at preflight and execution: CLEAN
+Commit subject: Add judge x402 lab and guarded live batch
+
+Execution-source SHA-256:
+AC49C082C9B2706AFE01377BCD516121648DB0E46ED4003025414DBE3A1C4261  scripts/demo_live_arc_batch.py
+78EC05FEBABCB697E5D809558425E1F8A88CA0F110187C23786E4A0668E12FCB  scripts/demo_live_arc_batch_fixed.py
+A37CF396401624832F2E9315B5401250836CA712598386536E8608F2CC7CE58D  tests/test_demo_live_arc_batch.py
+A7870D24A36BCC1140C36C396DD8A97CB8F7981C7FC5FEE7364360D76902A928  tests/test_demo_live_arc_batch_fixed.py
+
+Installed Circle command source inspection:
+name=@circle-fin/cli
+version=0.0.6
+package_json_sha256=5B5924D93A75ABAB96815999F3D0999EA69373A1468C2B96B2A9F72F79DA651A
+dist_index_js_sha256=92769B4F35065730BFB1B475CCA3CAE69563CDF2F421539968BE1513D6927F2D
+
+Post-run parent-environment name-only audit:
+HTTP_PROXY=False
+HTTPS_PROXY=False
+ALL_PROXY=False
+NO_PROXY=False
+SSL_CERT_FILE=False
+SSL_CERT_DIR=False
+CIRCLE_PROXY_URL=False
+
+No environment values were retained.

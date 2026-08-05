@@ -1,0 +1,10 @@
+Authenticated Circle transaction history - allowlisted fields only
+
+CIRCLE_HISTORY_OK tx=0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145 state=COMPLETE chain=ARC-TESTNET operation=TRANSFER direction=OUTBOUND amount=0.001
+CIRCLE_HISTORY_OK tx=0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d state=COMPLETE chain=ARC-TESTNET operation=TRANSFER direction=OUTBOUND amount=0.002
+CIRCLE_HISTORY_OK tx=0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27 state=COMPLETE chain=ARC-TESTNET operation=TRANSFER direction=OUTBOUND amount=0.003
+
+The reconciliation required exactly one authenticated-history match per hash,
+the fixed sender and recipient, one exact amount, ARC-TESTNET, TRANSFER, and
+OUTBOUND. Transaction IDs, pagination values, idempotency keys, wallet/session
+data, and complete Circle responses were not retained.

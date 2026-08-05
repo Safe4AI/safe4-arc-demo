@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from dataclasses import replace
 from datetime import datetime, timezone
 import json
 import os
@@ -100,6 +101,7 @@ def runtime_factory(
     pre_observation: Mapping[str, Any] | None = None,
     verification_status: str = "VERIFIED",
     runtime_secrets: dict[str, str] | None = None,
+    circle_cli_version: str = fixed.SUPPORTED_CIRCLE_CLI_VERSION,
 ) -> fixed.RuntimeFactory:
     class Authorizer:
         def authorize(self, item: Any) -> AuthorizationResult:
@@ -184,7 +186,7 @@ def runtime_factory(
             authorizer=Authorizer(),
             submitter=Submitter(),
             verifier=Verifier(),
-            circle_cli_version="0.0.6",
+            circle_cli_version=circle_cli_version,
             circle_wallet_preflight=wallet_preflight(),
             observe_public_balances=observe,
         )
@@ -485,7 +487,13 @@ def test_exact_private_plan_is_journaled_before_ports_and_transitions_are_durabl
         "revision": SOURCE_REVISION,
         "worktree_state": "CLEAN",
     }
-    assert public["circle_cli"]["version"] == "0.0.6"
+    assert public["circle_cli"] == {
+        "command": "circle --version",
+        "command_reported_version": "0.0.6",
+        "version_independently_verified": False,
+        "raw_command_output_retained": False,
+        "authenticated_wallet_preflight": wallet_preflight(),
+    }
     assert public["circle_cli"]["authenticated_wallet_preflight"]["address"] == fixed.FIXED_SENDER
     assert public["fixed_settlement"]["recipient"] == fixed.FIXED_RECIPIENT
     assert public["batch"]["terminal_status"] == "COMPLETE"
@@ -531,6 +539,85 @@ def test_required_arc_preflight_stops_before_first_pay(
     )
     assert journal["status"] == "ABORTED_NO_AUTOMATIC_RESUME"
     assert journal["execution_progress"]["transition_count"] == 0
+
+
+def test_unsupported_runtime_circle_version_stops_before_balance_or_pay(
+    tmp_path: Path,
+) -> None:
+    private_root = tmp_path / "private"
+    state = private_root / "run"
+    events: list[str] = []
+
+    with pytest.raises(
+        fixed.FixedBatchSafetyError,
+        match="CIRCLE_CLI_VERSION_UNSUPPORTED",
+    ):
+        execute_offline(
+            private_root,
+            state,
+            runtime_factory(
+                state,
+                events,
+                circle_cli_version="0.0.7",
+            ),
+        )
+
+    assert events == ["runtime-created"]
+    journal = json.loads(
+        (state / fixed.JOURNAL_FILENAME).read_text(encoding="utf-8")
+    )
+    assert journal["status"] == "ABORTED_NO_AUTOMATIC_RESUME"
+    assert journal["execution_progress"]["transition_count"] == 0
+
+
+def test_fixed_run_evidence_revalidates_pre_post_stages_and_pre_balance(
+    tmp_path: Path,
+) -> None:
+    private_root = tmp_path / "private"
+    state = private_root / "run"
+    events: list[str] = []
+    valid = execute_offline(
+        private_root,
+        state,
+        runtime_factory(state, events),
+    )
+
+    invalid_cases = (
+        (
+            replace(valid, pre_balances=balance_observation("POST")),
+            "PUBLIC_BALANCE_PRE_STAGE_INVALID",
+        ),
+        (
+            replace(valid, post_balances=balance_observation("PRE")),
+            "PUBLIC_BALANCE_POST_STAGE_INVALID",
+        ),
+        (
+            replace(
+                valid,
+                pre_balances=balance_observation(
+                    "PRE",
+                    sender_balance=(
+                        fixed.MIN_PREFLIGHT_SENDER_BALANCE_BASE_UNITS - 1
+                    ),
+                ),
+            ),
+            "PREFLIGHT_SENDER_BALANCE_TOO_LOW",
+        ),
+        (
+            replace(
+                valid,
+                pre_balances={
+                    "status": "NOT_OBSERVED",
+                    "stage": "PRE",
+                    "reason_code": "PUBLIC_BALANCE_RPC_UNAVAILABLE",
+                },
+            ),
+            "PREFLIGHT_ARC_RPC_REQUIRED",
+        ),
+    )
+    for evidence, reason_code in invalid_cases:
+        with pytest.raises(fixed.FixedBatchSafetyError, match=reason_code):
+            evidence.to_public_dict()
 
 
 def test_rpc_unknown_is_journaled_and_never_automatically_retried(tmp_path: Path) -> None:
@@ -793,6 +880,113 @@ def test_cli_version_and_source_revision_are_strictly_parsed_offline() -> None:
 
     assert fixed.observe_clean_source_identity(command_runner=git_runner) == clean_source()
     assert git_calls == 2
+
+
+def test_circle_version_and_wallet_commands_receive_sanitized_environment() -> None:
+    observed_environments: list[dict[str, str]] = []
+
+    def version_runner(command: list[str], **kwargs: Any) -> Any:
+        observed_environments.append(kwargs["env"])
+        return SimpleNamespace(returncode=0, stdout="0.0.6", stderr="")
+
+    def wallet_runner(command: list[str], **kwargs: Any) -> Any:
+        observed_environments.append(kwargs["env"])
+        return SimpleNamespace(
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "data": {
+                        "wallets": [
+                            {
+                                "address": fixed.FIXED_SENDER,
+                                "blockchain": ARC_CHAIN,
+                                "type": "agent",
+                            }
+                        ]
+                    }
+                }
+            ),
+            stderr="",
+        )
+
+    inherited = {
+        "Path": "C:\\Windows\\System32",
+        "SystemRoot": "C:\\Windows",
+        "APPDATA": "C:\\Users\\demo\\AppData\\Roaming",
+        "USERPROFILE": "C:\\Users\\demo",
+        "PAYMENT_FIREWALL_ADMIN_SECRET": "unsafe-safe4-secret",
+        "SAFE4_PROVIDER_RANGE_RISK_API_KEY": "unsafe-provider-secret",
+        "CIRCLE_ACCESS_TOKEN": "unsafe-circle-token",
+        "PRIVATE_KEY": "unsafe-private-key",
+        "HTTP_PROXY": "http://attacker.invalid",
+        "HTTPS_PROXY": "http://attacker.invalid",
+        "SSL_CERT_FILE": "C:\\attacker\\ca.pem",
+        "NODE_OPTIONS": "--require=C:\\attacker\\inject.js",
+        "NODE_EXTRA_CA_CERTS": "C:\\attacker\\ca.pem",
+    }
+    with patch.dict(os.environ, inherited, clear=True):
+        assert fixed.observe_circle_cli_version(
+            "circle-test",
+            command_runner=version_runner,
+        ) == fixed.SUPPORTED_CIRCLE_CLI_VERSION
+        assert fixed.verify_fixed_circle_wallet_preflight(
+            "circle-test",
+            command_runner=wallet_runner,
+        ) == wallet_preflight()
+
+    expected = {
+        "APPDATA": "C:\\Users\\demo\\AppData\\Roaming",
+        "PATH": "C:\\Windows\\System32",
+        "SYSTEMROOT": "C:\\Windows",
+        "USERPROFILE": "C:\\Users\\demo",
+    }
+    assert observed_environments == [expected, expected]
+
+
+@pytest.mark.parametrize(
+    "reported_version",
+    ("0.0.5", "0.0.7", "1.0.0", "0.0.6-alpha"),
+)
+def test_circle_version_command_rejects_every_other_semver(
+    reported_version: str,
+) -> None:
+    def runner(command: list[str], **kwargs: Any) -> Any:
+        return SimpleNamespace(returncode=0, stdout=reported_version, stderr="")
+
+    with pytest.raises(
+        fixed.FixedBatchSafetyError,
+        match="CIRCLE_CLI_VERSION_UNSUPPORTED",
+    ):
+        fixed.observe_circle_cli_version("circle-test", command_runner=runner)
+
+
+def test_arc_public_balance_observer_disables_ambient_http_environment() -> None:
+    class FakeHttpClient:
+        def __enter__(self) -> "FakeHttpClient":
+            return self
+
+        def __exit__(self, exc_type: Any, exc: Any, traceback: Any) -> bool:
+            return False
+
+    observer = fixed.ArcPublicBalanceObserver()
+    with (
+        patch("httpx.Client", return_value=FakeHttpClient()) as client_factory,
+        patch.object(
+            observer,
+            "_rpc",
+            side_effect=(
+                hex(ARC_CHAIN_ID),
+                hex(55_500_001),
+                hex(fixed.MIN_PREFLIGHT_SENDER_BALANCE_BASE_UNITS * 10),
+                hex(1_000_000_000_000_000_000),
+            ),
+        ),
+    ):
+        observed = observer("PRE")
+
+    assert observed["status"] == "OBSERVED"
+    assert observed["stage"] == "PRE"
+    client_factory.assert_called_once_with(timeout=15.0, trust_env=False)
 
 
 def test_local_fixture_secrets_are_fresh_ephemeral_and_not_static(tmp_path: Path) -> None:

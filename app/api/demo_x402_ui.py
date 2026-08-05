@@ -366,9 +366,9 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
     </section>
 
     <section class="evidence-lane" aria-label="Separate Arc evidence">
-      <div><span class="label">Separate live Arc Testnet evidence</span><p>These links are prior Circle Agent Wallet transfers. Running the browser lab never creates another transaction.</p></div>
-      <a class="evidence-link" href="https://testnet.arcscan.app/tx/0x9dedac01a941059342cb0f907a45f8b64478b3309327202db327afee4f12061d" target="_blank" rel="noreferrer noopener">Latest 0.01 USDC proof ↗</a>
-      <a class="evidence-link" href="https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d" target="_blank" rel="noreferrer noopener">Earlier 0.01 USDC proof ↗</a>
+      <div><span class="label">Separate live Arc Testnet evidence</span><p>Latest guarded batch: 3/3 sequential transfers RPC-verified, totaling 0.006 USDC to one reviewed recipient. Running the browser lab never creates another transaction.</p></div>
+      <a class="evidence-link" href="https://github.com/Safe4AI/safe4-arc-demo/tree/agent/live-arc-evidence/artifacts/live-arc-batch/20260805T123013Z" target="_blank" rel="noreferrer noopener">3-transfer evidence bundle ↗</a>
+      <a class="evidence-link" href="https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27" target="_blank" rel="noreferrer noopener">Latest 0.003 USDC proof ↗</a>
     </section>
   </main>
 

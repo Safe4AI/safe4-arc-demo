@@ -26,6 +26,7 @@ from dataclasses import dataclass, replace
 from decimal import Decimal
 import hashlib
 import json
+import os
 import re
 import subprocess
 import time
@@ -68,6 +69,31 @@ _TRANSACTION_HASH_KEYS = frozenset(
     {"txHash", "transactionHash", "transaction_hash", "tx_hash"}
 )
 
+# Circle commands receive an allowlisted environment instead of inheriting the
+# Safe4 process environment.  These are the minimum Windows command-discovery,
+# temporary-directory, and user-profile locations needed for ``circle.cmd`` /
+# Node execution and the CLI's existing local authentication state. Provider
+# configuration, proxy/CA overrides, Node injection variables, locale/runtime
+# overrides, and every token/secret/private-key variable are intentionally
+# absent.
+_CIRCLE_CLI_ENVIRONMENT_ALLOWLIST = frozenset(
+    {
+        "APPDATA",
+        "COMSPEC",
+        "HOMEDRIVE",
+        "HOMEPATH",
+        "LOCALAPPDATA",
+        "PATH",
+        "PATHEXT",
+        "PROGRAMDATA",
+        "SYSTEMROOT",
+        "TEMP",
+        "TMP",
+        "USERPROFILE",
+        "WINDIR",
+    }
+)
+
 
 class BatchValidationError(ValueError):
     """Raised before any port is invoked when a batch is unsafe or invalid."""
@@ -79,6 +105,35 @@ class BindingIntegrityError(RuntimeError):
 
 class EvidenceSanitizationError(RuntimeError):
     """Raised when public evidence contains a prohibited value."""
+
+
+def build_circle_cli_environment(
+    source_environment: Mapping[str, str] | None = None,
+) -> dict[str, str]:
+    """Return the narrow environment allowed for authenticated Circle CLI calls.
+
+    The allowlist is deliberately based on case-insensitive key names because
+    Windows environment variables are case-insensitive.  Values are copied
+    only from the current process (or an injected mapping for offline tests);
+    no credential, endpoint, proxy, CA, or Node configuration is synthesized.
+    """
+
+    source = os.environ if source_environment is None else source_environment
+    sanitized: dict[str, str] = {}
+    observed_names: set[str] = set()
+    for key, value in source.items():
+        normalized_key = str(key).upper()
+        if normalized_key not in _CIRCLE_CLI_ENVIRONMENT_ALLOWLIST:
+            continue
+        if normalized_key in observed_names:
+            raise BatchValidationError(
+                "Circle CLI environment contains duplicate case-insensitive keys"
+            )
+        if not isinstance(value, str):
+            raise BatchValidationError("Circle CLI environment values must be strings")
+        observed_names.add(normalized_key)
+        sanitized[str(key)] = value
+    return sanitized
 
 
 def _canonical_hash(document: Mapping[str, Any]) -> str:
@@ -1040,6 +1095,7 @@ class CircleCliSubmissionPort:
                 capture_output=True,
                 text=True,
                 timeout=self.timeout_seconds,
+                env=build_circle_cli_environment(),
             )
         except subprocess.TimeoutExpired:
             return SubmissionResult(
@@ -1308,7 +1364,7 @@ class ArcRpcVerificationPort:
             USDC_DECIMALS,
             self.native_usdc_decimals,
         )
-        with httpx.Client(timeout=15.0) as client:
+        with httpx.Client(timeout=15.0, trust_env=False) as client:
             try:
                 actual_chain_id = parse_hex_int(
                     rpc(client, self.rpc_url, "eth_chainId", []),
@@ -1605,4 +1661,5 @@ __all__ = [
     "build_circle_transfer_command",
     "assert_single_bound_outgoing_transfer",
     "assert_single_successful_bound_user_operation",
+    "build_circle_cli_environment",
 ]
