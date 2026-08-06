@@ -1,0 +1,9 @@
+Circle authenticated transaction history — allowlisted fields only
+
+state=COMPLETE
+operation=TRANSFER
+txHash=0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d
+blockchain=ARC-TESTNET
+
+Wallet transaction IDs, pagination data, session data, and complete API
+responses are deliberately not retained.

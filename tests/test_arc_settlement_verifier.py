@@ -9,6 +9,7 @@ from scripts.verify_arc_settlement import (
     USER_OPERATION_EVENT_TOPIC,
     address_topic,
     encode_transfer,
+    scale_amount_units,
     verify_circle_agent_wallet_payloads,
     verify_settlement_payloads,
 )
@@ -178,6 +179,13 @@ class CircleAgentWalletVerifierTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ArcSettlementError, "successful ERC-4337"):
             self.verify(transaction, receipt)
+
+    def test_scales_six_decimal_usdc_to_native_precision_exactly(self) -> None:
+        self.assertEqual(scale_amount_units(10_000, 6, 18), NATIVE_AMOUNT_UNITS)
+
+    def test_rejects_inexact_decimal_downscaling(self) -> None:
+        with self.assertRaisesRegex(ArcSettlementError, "represented exactly"):
+            scale_amount_units(1, 18, 6)
 
 
 if __name__ == "__main__":

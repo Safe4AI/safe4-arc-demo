@@ -1,0 +1,85 @@
+{
+  "atomic": false,
+  "chain": "ARC-TESTNET",
+  "chain_id": 5042002,
+  "circle_cli_command_reported_version": "0.0.6",
+  "counts": {
+    "authorized": 3,
+    "denied": 0,
+    "failed": 0,
+    "planned": 3,
+    "skipped": 0,
+    "submitted": 3,
+    "unknown": 0,
+    "verified": 3
+  },
+  "ended_at_utc": "2026-08-05T12:30:46Z",
+  "execution_model": "SEQUENTIAL_NON_ATOMIC_STOP_ON_FIRST_FAILURE",
+  "independent_checks": {
+    "authenticated_circle_history_matches": 3,
+    "exact_hash_rpc_verifications": 3,
+    "private_journal_terminal_status": "COMPLETE_REVIEW_REQUIRED",
+    "private_journal_transition_count": 18
+  },
+  "independent_review": {
+    "bundle_secret_findings": 0,
+    "exact_hash_rpc_verifications_reproduced": 3,
+    "execution_commit_audit_files": 164,
+    "execution_revision_tests_passed": 97,
+    "execution_revision_subtests_passed": 24,
+    "verdict": "PASS_BOUNDED_CLAIM"
+  },
+  "items": [
+    {
+      "amount_units": 1000,
+      "block_number": 55439625,
+      "circle_history_state": "COMPLETE",
+      "explorer_url": "https://testnet.arcscan.app/tx/0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145",
+      "item_id": "market-data",
+      "reason_code": "TASK_PURCHASE_MATCH",
+      "safe4_status": "AUTHORIZED",
+      "transaction_hash": "0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145",
+      "verification_status": "VERIFIED"
+    },
+    {
+      "amount_units": 2000,
+      "block_number": 55439642,
+      "circle_history_state": "COMPLETE",
+      "explorer_url": "https://testnet.arcscan.app/tx/0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d",
+      "item_id": "compute",
+      "reason_code": "TASK_PURCHASE_MATCH",
+      "safe4_status": "AUTHORIZED",
+      "transaction_hash": "0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d",
+      "verification_status": "VERIFIED"
+    },
+    {
+      "amount_units": 3000,
+      "block_number": 55439658,
+      "circle_history_state": "COMPLETE",
+      "explorer_url": "https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27",
+      "item_id": "agent-memory",
+      "reason_code": "TASK_PURCHASE_MATCH",
+      "safe4_status": "AUTHORIZED",
+      "transaction_hash": "0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27",
+      "verification_status": "VERIFIED"
+    }
+  ],
+  "observed_balances": {
+    "recipient_after_base_units": "46000000000000000",
+    "recipient_before_base_units": "40000000000000000",
+    "recipient_delta_base_units": "6000000000000000",
+    "sender_after_base_units": "19964000000000000000",
+    "sender_before_base_units": "19970000000000000000",
+    "sender_delta_base_units": "-6000000000000000",
+    "unit": "ARC_NATIVE_USDC_18_DECIMAL_BASE_UNITS"
+  },
+  "recipient": "0x530271da8cc4e44375f22ad9632bc61a55382f88",
+  "review_status": "PASS",
+  "run_id": "20260805T123013Z",
+  "schema_version": "safe4-live-arc-batch-evidence-package-v1",
+  "sender": "0x3985a31e4e42a31e437c1099306decbe2f08da4d",
+  "source_revision": "a2831a76e37e0e45e1d3e5d142484af5d2d12c63",
+  "started_at_utc": "2026-08-05T12:30:13Z",
+  "total_amount_units": 6000,
+  "x402_boundary": "LOCAL_SAFE4_RECEIPT_FIXTURE_FOR_AUTHORIZATION_NOT_EXTERNAL_X402_VENDOR_SETTLEMENT"
+}

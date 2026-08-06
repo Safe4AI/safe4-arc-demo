@@ -1,0 +1,11 @@
+Private journal allowlisted audit
+
+journal_status=COMPLETE_REVIEW_REQUIRED
+transition_count=18
+item=market-data latest=VERIFICATION_RESULT phases=AUTHORIZATION_STARTED,AUTHORIZATION_RESULT,SUBMISSION_STARTED,SUBMISSION_RESULT,VERIFICATION_STARTED,VERIFICATION_RESULT
+item=compute latest=VERIFICATION_RESULT phases=AUTHORIZATION_STARTED,AUTHORIZATION_RESULT,SUBMISSION_STARTED,SUBMISSION_RESULT,VERIFICATION_STARTED,VERIFICATION_RESULT
+item=agent-memory latest=VERIFICATION_RESULT phases=AUTHORIZATION_STARTED,AUTHORIZATION_RESULT,SUBMISSION_STARTED,SUBMISSION_RESULT,VERIFICATION_STARTED,VERIFICATION_RESULT
+
+The private journal is retained under the ignored canonical checkout .tmp
+directory with restricted access. Its full plan and six idempotency keys are
+deliberately excluded from this public evidence file.

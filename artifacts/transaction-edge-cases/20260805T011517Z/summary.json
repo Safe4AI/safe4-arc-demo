@@ -1,0 +1,3921 @@
+{
+  "baseline": {
+    "agent": "agent_alpha",
+    "amount": "0.001000",
+    "currency": "USDC",
+    "task_context_trust": "request-supplied-untrusted",
+    "user": "user_123",
+    "vendor": "circle_marketplace_company_research"
+  },
+  "execution": {
+    "broadcast": "NOT_INVOKED",
+    "database_backend": "SQLite",
+    "database_deleted_before_bundle_write": true,
+    "database_location": "EPHEMERAL_IGNORED_TMP",
+    "mode": "LOCAL_TESTCLIENT_AUTHORIZATION_ONLY",
+    "network": "BLOCKED",
+    "python": "3.13",
+    "rpc": "NOT_INVOKED",
+    "state_isolation": "ONE_UNIQUE_RUN_DATABASE_RESET_BETWEEN_INDEPENDENT_CASES",
+    "wallet": "NOT_INVOKED"
+  },
+  "independent_review": {
+    "status": "COMPLETED",
+    "verdict": "PASS"
+  },
+  "limitations": [
+    "POST /pay authorizes locally and does not expose a settlement executor.",
+    "Local transaction aliases are not chain transaction or settlement identifiers.",
+    "Idempotency proves one local budget and log write, not exactly-once external settlement.",
+    "Request-supplied task context is not principal-bound.",
+    "C01-C03 are known-gap canaries and are excluded from positive robustness claims.",
+    "T18 currently records an audit but no DENIED payment log and leaves its receipt unconsumed.",
+    "The database is unique per run and reset between cases, not a separate process per case."
+  ],
+  "preflight": {
+    "manifest_algorithm": "SHA256",
+    "manifest_digest": "8cffd331084696cb54499b67743d2b3bd89c99973c6d0df8cbd5958116569dec",
+    "manifest_files": [
+      "app/core/intent.py",
+      "app/main.py",
+      "app/payment_entry_checks.py",
+      "app/payment_finalize.py",
+      "app/payment_flow.py",
+      "scripts/run_edge_case_evidence.py",
+      "scripts/verify_arc_settlement.py"
+    ],
+    "python_version": "3.13.14",
+    "run_timestamp_utc": "2026-08-05T01:15:17Z",
+    "source": {
+      "kind": "unversioned_snapshot"
+    }
+  },
+  "run_id": "20260805T011517Z",
+  "scenarios": [
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [
+              "company-data",
+              "competitor",
+              "pricing",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "TASK_PURCHASE_MATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "TASK_PURCHASE_MATCH",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T01",
+      "input_delta": {
+        "amount": "0.001000",
+        "baseline": true,
+        "currency": "USDC"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": {
+              "allowed": false,
+              "matched_concepts": [],
+              "mode": "task-bound",
+              "reason_code": "PURCHASE_PURPOSE_MISMATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "PURCHASE_PURPOSE_MISMATCH",
+            "outcome": "DENY",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": {
+            "allowed": false,
+            "matched_concepts": [],
+            "mode": "task-bound",
+            "reason_code": "PURCHASE_PURPOSE_MISMATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "PURCHASE_PURPOSE_MISMATCH",
+          "outcome": "DENY",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "INTENT_VERIFICATION_FAILED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "INTENT_VERIFICATION_FAILED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "nested_reason_code": "PURCHASE_PURPOSE_MISMATCH",
+            "outcome": "DENY",
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T02",
+      "input_delta": {
+        "description": "Purchase a gift card for an unrelated entertainment giveaway.",
+        "purchase_purpose": "Purchase a gift card for an unrelated entertainment giveaway."
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": {
+              "allowed": false,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "SERVICE_CATEGORY_OUTSIDE_TASK",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "SERVICE_CATEGORY_OUTSIDE_TASK",
+            "outcome": "DENY",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": {
+            "allowed": false,
+            "matched_concepts": [
+              "company-data",
+              "competitor",
+              "pricing",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "SERVICE_CATEGORY_OUTSIDE_TASK",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "SERVICE_CATEGORY_OUTSIDE_TASK",
+          "outcome": "DENY",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "INTENT_VERIFICATION_FAILED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "INTENT_VERIFICATION_FAILED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "nested_reason_code": "SERVICE_CATEGORY_OUTSIDE_TASK",
+            "outcome": "DENY",
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T03",
+      "input_delta": {
+        "allowed_categories_unchanged": true,
+        "service_category": "gift-cards"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "claim_boundary": "Legacy justification acceptance is not task matching.",
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [],
+              "mode": "legacy-justification",
+              "reason_code": "LEGACY_JUSTIFICATION_ACCEPTED",
+              "task_context_trust": "not-supplied"
+            },
+            "label": "authorization",
+            "nested_reason_code": "LEGACY_JUSTIFICATION_ACCEPTED",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [],
+            "mode": "legacy-justification",
+            "reason_code": "LEGACY_JUSTIFICATION_ACCEPTED",
+            "task_context_trust": "not-supplied"
+          },
+          "label": "authorization",
+          "nested_reason_code": "LEGACY_JUSTIFICATION_ACCEPTED",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "legacy_mode_recorded": true,
+        "no_task_match_claim": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "authorization",
+            "nested_reason_code": "LEGACY_JUSTIFICATION_ACCEPTED",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T04A",
+      "input_delta": {
+        "legacy_description": "detailed",
+        "payment_intent": "ABSENT"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": {
+              "allowed": false,
+              "matched_concepts": [],
+              "mode": "task-bound",
+              "reason_code": "INTENT_CONTEXT_INVALID",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "INTENT_CONTEXT_INVALID",
+            "outcome": "DENY",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": {
+            "allowed": false,
+            "matched_concepts": [],
+            "mode": "task-bound",
+            "reason_code": "INTENT_CONTEXT_INVALID",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "INTENT_CONTEXT_INVALID",
+          "outcome": "DENY",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "INTENT_VERIFICATION_FAILED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "INTENT_VERIFICATION_FAILED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "nested_reason_code": "INTENT_CONTEXT_INVALID",
+            "outcome": "DENY",
+            "top_level_code": "INTENT_VERIFICATION_FAILED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T04B",
+      "input_delta": {
+        "payment_intent": "NON_OBJECT"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "authorization",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {
+              "agent_transaction_cap": "25.000000",
+              "requested_amount": "25.010000"
+            },
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "AGENT_TRANSACTION_CAP_EXCEEDED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "authorization",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {
+            "agent_transaction_cap": "25.000000",
+            "requested_amount": "25.010000"
+          },
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "AGENT_TRANSACTION_CAP_EXCEEDED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "AGENT_TRANSACTION_CAP_EXCEEDED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "denial_audit_recorded": true,
+        "denied_log_created": true,
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "receipt_consumed_on_denial": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY",
+            "top_level_code": "AGENT_TRANSACTION_CAP_EXCEEDED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T05",
+      "input_delta": {
+        "amount": "25.010000",
+        "default_agent_transaction_cap": "25.000000"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "authorization",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {
+              "requested_amount": "10.010000",
+              "transaction_cap": "10.000000"
+            },
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "TRANSACTION_CAP_EXCEEDED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "authorization",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {
+            "requested_amount": "10.010000",
+            "transaction_cap": "10.000000"
+          },
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "TRANSACTION_CAP_EXCEEDED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "TRANSACTION_CAP_EXCEEDED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY",
+            "top_level_code": "TRANSACTION_CAP_EXCEEDED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T06",
+      "input_delta": {
+        "agent_cap_permits": true,
+        "amount": "10.010000",
+        "default_user_transaction_cap": "10.000000"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "authorization",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {
+              "daily_cap": "100.000000",
+              "requested_amount": "6.000000",
+              "spent_today": "95.000000"
+            },
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "DAILY_CAP_EXCEEDED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "authorization",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {
+            "daily_cap": "100.000000",
+            "requested_amount": "6.000000",
+            "spent_today": "95.000000"
+          },
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "DAILY_CAP_EXCEEDED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "DAILY_CAP_EXCEEDED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "95.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 2,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "95.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "cap_details_recorded": true,
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY",
+            "top_level_code": "DAILY_CAP_EXCEEDED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T07",
+      "input_delta": {
+        "amount": "6.000000",
+        "daily_cap": "100.000000",
+        "prior_spend": "95.000000"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "state_after_first_authorization": {
+            "agent_spend": "0.001000",
+            "authorized_log_count": 1,
+            "user_spend": "0.001000"
+          },
+          "state_scope": "ordered_pair_only"
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "first_receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "first_authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-3"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "second_receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-4"
+            },
+            "http_status": 429,
+            "intent": null,
+            "label": "second_authorization",
+            "nested_reason_code": null,
+            "outcome": "RATE_LIMIT",
+            "policy_details": {
+              "recent_event_count": 1,
+              "velocity_limit": 1
+            },
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "VELOCITY_LIMIT_EXCEEDED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-4"
+          },
+          "http_status": 429,
+          "intent": null,
+          "label": "second_authorization",
+          "nested_reason_code": null,
+          "outcome": "RATE_LIMIT",
+          "policy_details": {
+            "recent_event_count": 1,
+            "velocity_limit": 1
+          },
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "VELOCITY_LIMIT_EXCEEDED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 13,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "VELOCITY_LIMIT_EXCEEDED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 2,
+            "payment_log_results": [
+              "AUTHORIZED",
+              "DENIED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 11,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 2,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 2,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "second_agent_spend_unchanged": true,
+        "second_authorized_log_count_unchanged": true,
+        "second_user_spend_unchanged": true,
+        "step_1_first_receipt_challenge": true,
+        "step_2_first_authorization": true,
+        "step_3_second_receipt_challenge": true,
+        "step_4_second_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "first_receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "first_authorization",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          },
+          {
+            "http_status": 402,
+            "label": "second_receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 429,
+            "label": "second_authorization",
+            "outcome": "RATE_LIMIT",
+            "top_level_code": "VELOCITY_LIMIT_EXCEEDED"
+          }
+        ],
+        "primary_label": "second_authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T08",
+      "input_delta": {
+        "second_request": "distinct",
+        "velocity_requests": 1,
+        "window_seconds": 300
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "external_exactly_once_settlement": "NOT_PROVEN"
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "first_authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "idempotent_replay",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [
+              "company-data",
+              "competitor",
+              "pricing",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "TASK_PURCHASE_MATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "idempotent_replay",
+          "nested_reason_code": "TASK_PURCHASE_MATCH",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "identical_response_bodies": true,
+        "one_payment_log": true,
+        "replay_agent_spend_unchanged": true,
+        "replay_user_spend_unchanged": true,
+        "step_1_receipt_challenge": true,
+        "step_2_first_authorization": true,
+        "step_3_idempotent_replay": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "first_authorization",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          },
+          {
+            "http_status": 200,
+            "label": "idempotent_replay",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          }
+        ],
+        "primary_label": "idempotent_replay",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T09",
+      "input_delta": {
+        "idempotency_key": "FIXED_VALID_UUIDV4",
+        "second_payload": "IDENTICAL"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "first_authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-3"
+            },
+            "http_status": 409,
+            "intent": null,
+            "label": "conflicting_reuse",
+            "nested_reason_code": null,
+            "outcome": "CONFLICT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "IDEMPOTENCY_KEY_REUSED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-3"
+          },
+          "http_status": 409,
+          "intent": null,
+          "label": "conflicting_reuse",
+          "nested_reason_code": null,
+          "outcome": "CONFLICT",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "IDEMPOTENCY_KEY_REUSED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "conflict_agent_spend_unchanged": true,
+        "conflict_payment_log_unchanged": true,
+        "conflict_user_spend_unchanged": true,
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_first_authorization": true,
+        "step_3_conflicting_reuse": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "first_authorization",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          },
+          {
+            "http_status": 409,
+            "label": "conflicting_reuse",
+            "outcome": "CONFLICT",
+            "top_level_code": "IDEMPOTENCY_KEY_REUSED"
+          }
+        ],
+        "primary_label": "conflicting_reuse",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T10",
+      "input_delta": {
+        "idempotency_key": "SAME_AS_FIRST",
+        "second_amount": "0.002000"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "first_authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-3"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_reuse",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_RECEIPT_ALREADY_USED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-3"
+          },
+          "http_status": 402,
+          "intent": null,
+          "label": "receipt_reuse",
+          "nested_reason_code": null,
+          "outcome": "CHALLENGE",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "PAYMENT_RECEIPT_ALREADY_USED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 9,
+            "audit_reason_codes": [
+              "PAYMENT_RECEIPT_ALREADY_USED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 8,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "reuse_agent_spend_unchanged": true,
+        "reuse_payment_log_unchanged": true,
+        "reuse_user_spend_unchanged": true,
+        "step_1_receipt_challenge": true,
+        "step_2_first_authorization": true,
+        "step_3_receipt_reuse": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.001000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 200,
+            "label": "first_authorization",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          },
+          {
+            "http_status": 402,
+            "label": "receipt_reuse",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_RECEIPT_ALREADY_USED"
+          }
+        ],
+        "primary_label": "receipt_reuse",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.001000"
+      },
+      "id": "T11",
+      "input_delta": {
+        "receipt": "REUSED",
+        "second_vendor": "synthetic_company_research_alternate"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "expired_receipt",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_RECEIPT_EXPIRED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 402,
+          "intent": null,
+          "label": "expired_receipt",
+          "nested_reason_code": null,
+          "outcome": "CHALLENGE",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "PAYMENT_RECEIPT_EXPIRED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "PAYMENT_RECEIPT_EXPIRED",
+              "PAYMENT_REQUIRED"
+            ],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_expired_receipt": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 402,
+            "label": "expired_receipt",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_RECEIPT_EXPIRED"
+          }
+        ],
+        "primary_label": "expired_receipt",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T12",
+      "input_delta": {
+        "global_clock_modified": false,
+        "receipt_expiry_seconds": 1
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "tampered_receipt",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 402,
+          "intent": null,
+          "label": "tampered_receipt",
+          "nested_reason_code": null,
+          "outcome": "CHALLENGE",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "PAYMENT_REQUIRED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED"
+            ],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_tampered_receipt": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 402,
+            "label": "tampered_receipt",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          }
+        ],
+        "primary_label": "tampered_receipt",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T13",
+      "input_delta": {
+        "receipt_signature": "ONE_CHARACTER_MODIFIED"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "validation",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "INVALID_IDEMPOTENCY_KEY"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-1"
+          },
+          "http_status": 422,
+          "intent": null,
+          "label": "validation",
+          "nested_reason_code": null,
+          "outcome": "VALIDATION_REJECT",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "INVALID_IDEMPOTENCY_KEY"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 0,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_validation": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 422,
+            "label": "validation",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": "INVALID_IDEMPOTENCY_KEY"
+          }
+        ],
+        "primary_label": "validation",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T14",
+      "input_delta": {
+        "idempotency_key": "MALFORMED"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "client_dimension": "client-ip-1",
+          "client_key_source": "caller-supplied-forwarded-address"
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "first_request",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 429,
+            "intent": null,
+            "label": "second_request",
+            "nested_reason_code": null,
+            "outcome": "RATE_LIMIT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": true,
+            "retry_after_seconds": 59,
+            "top_level_code": "RATE_LIMITED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 429,
+          "intent": null,
+          "label": "second_request",
+          "nested_reason_code": null,
+          "outcome": "RATE_LIMIT",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": true,
+          "retry_after_seconds": 59,
+          "top_level_code": "RATE_LIMITED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 3,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED"
+            ],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 2,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "positive_retry_after_seconds": true,
+        "primary_not_authorized": true,
+        "step_1_first_request": true,
+        "step_2_second_request": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "first_request",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 429,
+            "label": "second_request",
+            "outcome": "RATE_LIMIT",
+            "retry_after_present": true,
+            "top_level_code": "RATE_LIMITED"
+          }
+        ],
+        "primary_label": "second_request",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T15",
+      "input_delta": {
+        "api_limit": 1,
+        "synthetic_client": "client-ip-1",
+        "window_seconds": 60
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "request_agent_state": {
+            "after": null,
+            "before": null
+          },
+          "token_agent_state": {
+            "after": "0.000000",
+            "before": "0.000000"
+          }
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "identity_check",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "AGENT_ID_MISMATCH"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-1"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "identity_check",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "AGENT_ID_MISMATCH"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 0,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "no_audit_entry": true,
+        "no_payment_log": true,
+        "primary_not_authorized": true,
+        "request_agent_budget_unchanged": true,
+        "step_1_identity_check": true,
+        "token_agent_spend_unchanged": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 403,
+            "label": "identity_check",
+            "outcome": "DENY",
+            "top_level_code": "AGENT_ID_MISMATCH"
+          }
+        ],
+        "primary_label": "identity_check",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T16",
+      "input_delta": {
+        "request_agent": "agent_beta",
+        "token_agent": "agent_alpha"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "generic_422_safe4_top_level_code": "ABSENT"
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "zero_amount",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "negative_amount",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-3"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "excess_precision",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-4"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "unsupported_currency",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-5"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "extra_field",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-6"
+            },
+            "http_status": 413,
+            "intent": null,
+            "label": "oversized_body",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "REQUEST_TOO_LARGE"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-6"
+          },
+          "http_status": 413,
+          "intent": null,
+          "label": "oversized_body",
+          "nested_reason_code": null,
+          "outcome": "VALIDATION_REJECT",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "REQUEST_TOO_LARGE"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 0,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_zero_amount": true,
+        "step_2_negative_amount": true,
+        "step_3_excess_precision": true,
+        "step_4_unsupported_currency": true,
+        "step_5_extra_field": true,
+        "step_6_oversized_body": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 422,
+            "label": "zero_amount",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": null
+          },
+          {
+            "http_status": 422,
+            "label": "negative_amount",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": null
+          },
+          {
+            "http_status": 422,
+            "label": "excess_precision",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": null
+          },
+          {
+            "http_status": 422,
+            "label": "unsupported_currency",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": null
+          },
+          {
+            "http_status": 422,
+            "label": "extra_field",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": null
+          },
+          {
+            "http_status": 413,
+            "label": "oversized_body",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": "REQUEST_TOO_LARGE"
+          }
+        ],
+        "primary_label": "oversized_body",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T17",
+      "input_delta": {
+        "variants": [
+          "zero_amount",
+          "negative_amount",
+          "excess_precision",
+          "unsupported_currency",
+          "extra_field",
+          "oversized_body"
+        ]
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "current_log_behavior": "NO_DENIED_PAYMENT_LOG",
+          "current_receipt_behavior": "NOT_CONSUMED",
+          "receipt_consumed": false
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "authorization",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {
+              "max_cost": "0.000500",
+              "requested_amount": "0.001000",
+              "spent_today": "0.000000"
+            },
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "SCOPE_OF_AUTONOMY_MAX_COST_EXCEEDED"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "authorization",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {
+            "max_cost": "0.000500",
+            "requested_amount": "0.001000",
+            "spent_today": "0.000000"
+          },
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "SCOPE_OF_AUTONOMY_MAX_COST_EXCEEDED"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "SCOPE_OF_AUTONOMY_MAX_COST_EXCEEDED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "current_scope_denial_creates_no_payment_log": true,
+        "current_scope_denial_leaves_receipt_unconsumed": true,
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "scope_denial_audit_recorded": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY",
+            "top_level_code": "SCOPE_OF_AUTONOMY_MAX_COST_EXCEEDED"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T18",
+      "input_delta": {
+        "projected_spend": "0.001000",
+        "scope_max_cost": "0.000500"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 403,
+            "intent": null,
+            "label": "authorization",
+            "nested_reason_code": null,
+            "outcome": "DENY",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "BUDGET_NOT_FOUND"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 403,
+          "intent": null,
+          "label": "authorization",
+          "nested_reason_code": null,
+          "outcome": "DENY",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "BUDGET_NOT_FOUND"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 6,
+            "audit_reason_codes": [
+              "BUDGET_NOT_FOUND",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "DENIED"
+            ],
+            "user_configured": false,
+            "user_spend": null
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 5,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": false,
+            "user_spend": null
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "agent_spend_unchanged": true,
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": true,
+        "user_remains_unconfigured": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY",
+            "top_level_code": "BUDGET_NOT_FOUND"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T19",
+      "input_delta": {
+        "user_id": "synthetic-unconfigured-user-1"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "approval_authority": "SYNTHETIC_LOCAL_TEST_FIXTURE",
+          "pending_state": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "HITL_RULE_TRIGGERED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          }
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": "approval-fixture-1",
+              "local_transaction": null,
+              "request": "request-2"
+            },
+            "http_status": 202,
+            "intent": null,
+            "label": "pending_approval",
+            "nested_reason_code": null,
+            "outcome": "PENDING_APPROVAL",
+            "policy_details": {},
+            "response_status": "PENDING_APPROVAL",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-3"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "approved_fixture_retry",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": "approval-fixture-1",
+            "local_transaction": null,
+            "request": "request-2"
+          },
+          "http_status": 202,
+          "intent": null,
+          "label": "pending_approval",
+          "nested_reason_code": null,
+          "outcome": "PENDING_APPROVAL",
+          "policy_details": {},
+          "response_status": "PENDING_APPROVAL",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "9.990000",
+            "audit_entry_count": 11,
+            "audit_reason_codes": [
+              "HITL_RULE_TRIGGERED",
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "9.990000"
+          },
+          "agent_spend_delta": "9.990000",
+          "audit_entry_delta": 9,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 2,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "9.990000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "hitl_audit_reason_recorded": true,
+        "pending_agent_spend_unchanged": true,
+        "pending_payment_log_unchanged": true,
+        "pending_spend_unchanged": true,
+        "primary_not_authorized": true,
+        "step_1_receipt_challenge": true,
+        "step_2_pending_approval": true,
+        "step_3_approved_fixture_retry": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "9.990000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 202,
+            "label": "pending_approval",
+            "outcome": "PENDING_APPROVAL",
+            "response_status": "PENDING_APPROVAL",
+            "top_level_code": null
+          },
+          {
+            "http_status": 200,
+            "label": "approved_fixture_retry",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "response_status": "AUTHORIZED"
+          }
+        ],
+        "primary_label": "pending_approval",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "9.990000"
+      },
+      "id": "T20",
+      "input_delta": {
+        "amount": "9.990000",
+        "approval": "SYNTHETIC_LOCAL_FIXTURE",
+        "hitl_threshold": "5.000000"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {},
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 422,
+            "intent": null,
+            "label": "mcp_context_validation",
+            "nested_reason_code": null,
+            "outcome": "VALIDATION_REJECT",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "INVALID_MCP_CONTEXT"
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": null,
+            "request": "request-1"
+          },
+          "http_status": 422,
+          "intent": null,
+          "label": "mcp_context_validation",
+          "nested_reason_code": null,
+          "outcome": "VALIDATION_REJECT",
+          "policy_details": {},
+          "response_status": null,
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": "INVALID_MCP_CONTEXT"
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "agent_spend_delta": "0.000000",
+          "audit_entry_delta": 0,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 0,
+          "user_spend_delta": "0.000000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": true,
+        "expected_user_spend_delta": true,
+        "primary_not_authorized": true,
+        "step_1_mcp_context_validation": true
+      },
+      "evidence_class": "local_application_authorization",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 422,
+            "label": "mcp_context_validation",
+            "outcome": "VALIDATION_REJECT",
+            "top_level_code": "INVALID_MCP_CONTEXT"
+          }
+        ],
+        "primary_label": "mcp_context_validation",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "T21",
+      "input_delta": {
+        "mcp_action": "ABSENT",
+        "mcp_tool_id": "srv_synthetic:catalog"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "observations": {
+          "desired_outcome": "DENY",
+          "external_execution": "NOT_ATTEMPTED",
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "competitor",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [
+              "competitor",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "TASK_PURCHASE_MATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "TASK_PURCHASE_MATCH",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": false,
+        "expected_user_spend_delta": false,
+        "primary_not_authorized": false,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": false
+      },
+      "evidence_class": "red_team_canary",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "C01",
+      "input_delta": {
+        "description": "Purchase a competitor research gift card for an unrelated giveaway.",
+        "purchase_purpose": "Purchase a competitor research gift card for an unrelated giveaway."
+      },
+      "known_gap": true,
+      "verdict": "FAIL"
+    },
+    {
+      "actual": {
+        "observations": {
+          "desired_outcome": "DENY",
+          "external_execution": "NOT_ATTEMPTED",
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [
+              "company-data",
+              "competitor",
+              "pricing",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "TASK_PURCHASE_MATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "TASK_PURCHASE_MATCH",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": false,
+        "expected_user_spend_delta": false,
+        "primary_not_authorized": false,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": false
+      },
+      "evidence_class": "red_team_canary",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "C02",
+      "input_delta": {
+        "description": "Purchase a gift card for an unrelated entertainment giveaway.",
+        "purchase_purpose": "SPOOFED_ALLOWED_SENTENCE"
+      },
+      "known_gap": true,
+      "verdict": "FAIL"
+    },
+    {
+      "actual": {
+        "observations": {
+          "desired_outcome": "DENY",
+          "external_execution": "NOT_ATTEMPTED",
+          "receipt_consumed": true
+        },
+        "ordered_steps": [
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": null,
+              "request": "request-1"
+            },
+            "http_status": 402,
+            "intent": null,
+            "label": "receipt_challenge",
+            "nested_reason_code": null,
+            "outcome": "CHALLENGE",
+            "policy_details": {},
+            "response_status": null,
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "correlation": {
+              "approval_fixture": null,
+              "local_transaction": "local-transaction-1",
+              "request": "request-2"
+            },
+            "http_status": 200,
+            "intent": {
+              "allowed": true,
+              "matched_concepts": [
+                "company-data",
+                "competitor",
+                "pricing",
+                "research"
+              ],
+              "mode": "task-bound",
+              "reason_code": "TASK_PURCHASE_MATCH",
+              "task_context_trust": "request-supplied-untrusted"
+            },
+            "label": "authorization",
+            "nested_reason_code": "TASK_PURCHASE_MATCH",
+            "outcome": "ALLOW",
+            "policy_details": {},
+            "response_status": "AUTHORIZED",
+            "retry_after_present": false,
+            "retry_after_seconds": null,
+            "top_level_code": null
+          }
+        ],
+        "primary": {
+          "correlation": {
+            "approval_fixture": null,
+            "local_transaction": "local-transaction-1",
+            "request": "request-2"
+          },
+          "http_status": 200,
+          "intent": {
+            "allowed": true,
+            "matched_concepts": [
+              "company-data",
+              "competitor",
+              "pricing",
+              "research"
+            ],
+            "mode": "task-bound",
+            "reason_code": "TASK_PURCHASE_MATCH",
+            "task_context_trust": "request-supplied-untrusted"
+          },
+          "label": "authorization",
+          "nested_reason_code": "TASK_PURCHASE_MATCH",
+          "outcome": "ALLOW",
+          "policy_details": {},
+          "response_status": "AUTHORIZED",
+          "retry_after_present": false,
+          "retry_after_seconds": null,
+          "top_level_code": null
+        },
+        "settlement_executor": {
+          "reason": "POST /pay is a local authorization path and exposes no settlement executor.",
+          "status": "NOT_OBSERVED"
+        },
+        "state": {
+          "after": {
+            "agent_spend": "0.001000",
+            "audit_entry_count": 7,
+            "audit_reason_codes": [
+              "PAYMENT_REQUIRED",
+              "X402_RECEIPT_ACCEPTED"
+            ],
+            "payment_log_count": 1,
+            "payment_log_results": [
+              "AUTHORIZED"
+            ],
+            "user_configured": true,
+            "user_spend": "0.001000"
+          },
+          "agent_spend_delta": "0.001000",
+          "audit_entry_delta": 6,
+          "before": {
+            "agent_spend": "0.000000",
+            "audit_entry_count": 1,
+            "audit_reason_codes": [],
+            "payment_log_count": 0,
+            "payment_log_results": [],
+            "user_configured": true,
+            "user_spend": "0.000000"
+          },
+          "payment_log_delta": 1,
+          "user_spend_delta": "0.001000"
+        }
+      },
+      "assertions": {
+        "expected_agent_spend_delta": false,
+        "expected_user_spend_delta": false,
+        "primary_not_authorized": false,
+        "step_1_receipt_challenge": true,
+        "step_2_authorization": false
+      },
+      "evidence_class": "red_team_canary",
+      "expected": {
+        "agent_spend_delta": "0.000000",
+        "ordered_steps": [
+          {
+            "http_status": 402,
+            "label": "receipt_challenge",
+            "outcome": "CHALLENGE",
+            "top_level_code": "PAYMENT_REQUIRED"
+          },
+          {
+            "http_status": 403,
+            "label": "authorization",
+            "outcome": "DENY"
+          }
+        ],
+        "primary_label": "authorization",
+        "settlement_executor": "NOT_OBSERVED",
+        "user_spend_delta": "0.000000"
+      },
+      "id": "C03",
+      "input_delta": {
+        "task_and_category_unchanged": true,
+        "vendor": "gift_card_shop"
+      },
+      "known_gap": true,
+      "verdict": "FAIL"
+    }
+  ],
+  "schema_version": "safe4-transaction-evidence/1.0",
+  "settlement_fixtures": [
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "missing_transaction"
+      },
+      "id": "S01",
+      "input_delta": {
+        "fixture_case": "missing_transaction"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "missing_receipt"
+      },
+      "id": "S02",
+      "input_delta": {
+        "fixture_case": "missing_receipt"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "reverted_receipt"
+      },
+      "id": "S03",
+      "input_delta": {
+        "fixture_case": "reverted_receipt"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "wrong_recipient"
+      },
+      "id": "S04",
+      "input_delta": {
+        "fixture_case": "wrong_recipient"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "wrong_amount"
+      },
+      "id": "S05",
+      "input_delta": {
+        "fixture_case": "wrong_amount"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "unrelated_transfer"
+      },
+      "id": "S06",
+      "input_delta": {
+        "fixture_case": "unrelated_transfer"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "failed_user_operation"
+      },
+      "id": "S07",
+      "input_delta": {
+        "fixture_case": "failed_user_operation"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    },
+    {
+      "actual": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category_matched": true,
+        "rpc_invoked": false
+      },
+      "evidence_class": "local_settlement_fixture",
+      "expected": {
+        "error_class": "ArcSettlementError",
+        "outcome": "REJECT",
+        "reason_category": "unsafe_decimal_downscaling"
+      },
+      "id": "S08",
+      "input_delta": {
+        "fixture_case": "unsafe_decimal_downscaling"
+      },
+      "known_gap": false,
+      "verdict": "PASS"
+    }
+  ],
+  "summary": {
+    "allowed": 6,
+    "authorization_only_cases": 25,
+    "challenge_step_count": 25,
+    "challenged": 3,
+    "conflict": 1,
+    "coverage_verdicts": {
+      "FAIL": 3,
+      "PASS": 22
+    },
+    "denied": 9,
+    "failed": 3,
+    "known_gap_canaries": 3,
+    "overall_verdict": "REQUIRED_PASS_WITH_KNOWN_GAPS",
+    "passed": 22,
+    "pending_approval": 1,
+    "primary_outcomes": {
+      "ALLOW": 6,
+      "CHALLENGE": 3,
+      "CONFLICT": 1,
+      "DENY": 9,
+      "PENDING_APPROVAL": 1,
+      "RATE_LIMIT": 2,
+      "VALIDATION_REJECT": 3
+    },
+    "rate_limited": 2,
+    "required_scenarios_failed": 0,
+    "required_scenarios_passed": 22,
+    "scenario_count": 25,
+    "settlement_fixtures_failed": 0,
+    "settlement_fixtures_passed": 8,
+    "validation_rejected": 3
+  }
+}

@@ -1,0 +1,40 @@
+Safe4 live Arc Testnet transaction tests - sanitized allowlisted observations
+Observed 2026-08-05
+
+LIVE_TEST_ID=L01
+SAFE4_GOLDEN_PATH_START
+MODE=CIRCLE_AGENT_WALLET_LIVE
+SCENARIO=TASK_MATCH
+amount=0.01 USDC
+task_context_trust=request-supplied-untrusted
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+settlement=RPC_VERIFIED
+transaction_hash=0x9dedac01a941059342cb0f907a45f8b64478b3309327202db327afee4f12061d
+block_number=55430634
+block_timestamp=2026-08-05T11:13:47Z
+sender=0x3985a31e4e42a31e437c1099306decbe2f08da4d
+recipient=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+amount_units=10000
+amount_usdc=0.010000
+execution_path=ERC_4337_AGENT_WALLET
+rpc_verified=True
+broadcast=SUBMITTED_AFTER_SAFE4_ALLOW
+live_broadcast_notice=FRESH_ARC_TESTNET_TRANSACTION_BROADCAST_AFTER_SAFE4_ALLOW
+
+LIVE_TEST_ID=L02
+SCENARIO=TASK_MISMATCH
+VERDICT=DENIED
+reason_code=PURCHASE_PURPOSE_MISMATCH
+demo_orchestrator_broadcast=NOT_INVOKED_AFTER_SAFE4_DENIED
+settlement_executor_calls_before=1
+settlement_executor_calls_after=1
+DENIED_DEMO_EXECUTOR_NOT_INVOKED=PASS
+SAFE4_GOLDEN_PATH_OK
+
+balance_before_usdc=19.98
+balance_after_usdc=19.97
+balance_delta_usdc=0.01
+required_markers_missing=0
+settlement_fields_valid=True
+LIVE_TEST_PASS=True

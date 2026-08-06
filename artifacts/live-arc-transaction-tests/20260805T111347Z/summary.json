@@ -1,0 +1,66 @@
+{
+  "declared_maximum_coordinator_settlement_invocations": 1,
+  "amount_units": 10000,
+  "amount_usdc": "0.010000",
+  "balance_after_usdc": "19.97",
+  "balance_before_usdc": "19.98",
+  "balance_delta_usdc": "0.01",
+  "block_number": 55430634,
+  "block_timestamp": "2026-08-05T11:13:47Z",
+  "chain": "ARC-TESTNET",
+  "chain_id": 5042002,
+  "execution_path": "ERC_4337_AGENT_WALLET",
+  "explorer_url": "https://testnet.arcscan.app/tx/0x9dedac01a941059342cb0f907a45f8b64478b3309327202db327afee4f12061d",
+  "independent_review": {
+    "secret_scan_findings": 0,
+    "tests_passed": 5,
+    "tests_reviewed": 5,
+    "verdict": "PASS"
+  },
+  "observed_exact_hash_live_transfers": 1,
+  "recipient": "0x530271DA8CC4e44375f22ad9632bC61A55382f88",
+  "run_id": "20260805T111347Z",
+  "schema_version": "1.0",
+  "sender": "0x3985a31e4e42a31e437c1099306decbe2f08da4d",
+  "source": {
+    "critical_file_mismatches": 0,
+    "critical_files_compared": 8,
+    "execution_workspace": "unversioned source snapshot",
+    "matching_public_commit": "2477e6812ba145e785c8ff76e986828f1d27ae5e"
+  },
+  "tests": [
+    {
+      "actual": "ALLOWED then one RPC-verified Arc Testnet submission",
+      "expected": "ALLOWED then exactly one settlement invocation",
+      "id": "L01",
+      "reason_code": "TASK_PURCHASE_MATCH",
+      "verdict": "PASS"
+    },
+    {
+      "actual": "DENIED; settlement executor calls remained 1 to 1",
+      "expected": "DENIED with no additional settlement invocation",
+      "id": "L02",
+      "reason_code": "PURCHASE_PURPOSE_MISMATCH",
+      "verdict": "PASS"
+    },
+    {
+      "actual": "Exact ERC-4337 sender, recipient, amount, receipt, and block matched",
+      "expected": "Independent Arc RPC settlement verification",
+      "id": "L03",
+      "verdict": "PASS"
+    },
+    {
+      "actual": "COMPLETE / TRANSFER / ARC-TESTNET with the exact hash",
+      "expected": "Authenticated Circle history contains one exact-hash match",
+      "id": "L04",
+      "verdict": "PASS"
+    },
+    {
+      "actual": "Wallet balance changed from 19.98 to 19.97 USDC",
+      "expected": "Observed balance delta of 0.01 USDC",
+      "id": "L05",
+      "verdict": "PASS"
+    }
+  ],
+  "transaction_hash": "0x9dedac01a941059342cb0f907a45f8b64478b3309327202db327afee4f12061d"
+}

@@ -1,0 +1,16 @@
+Source provenance for live Arc Testnet transaction tests
+
+Execution workspace: unversioned source snapshot
+Matching public commit: 2477e6812ba145e785c8ff76e986828f1d27ae5e
+Critical files compared: 8
+Critical file mismatches: 0
+
+SHA-256 digests:
+4d5cd79c16a9c256a333527a0a07d04e1e119f95096400070ff735bb3b66f9c1  scripts/demo_golden_path.py
+7de3c07c2fc1ef29f2db183f9de508b6bb0ede7e56abe2b05e91580cf28d2099  scripts/demo_golden_path.ps1
+5f4036bd3d23b3ea63a585dbaddedaded9f0c03fb90fe2743f7666c414335689  scripts/verify_arc_settlement.py
+466be52f68e4c735c6423602de00d01ea73f0b592ad939497deeae2829060529  app/main.py
+f4b3b2097c6c373ecf73f7a10220f0e069787122d1c7f9b66e9a182e3133c866  app/core/intent.py
+0a0f53eba62ff16980913c6a9981521f9da9c6667f87425775dfefbe0ddfce4f  tests/test_demo_golden_path.py
+efb1a73f643af830d4f7239ace1312b8acb891c8a766964f1a36e6ab6663bb07  tests/test_arc_settlement_verifier.py
+16a422fe0fceb88a80c2502055d266ac3bcb4ad3bff4e3eb94cfde53a2f74d55  tests/test_intent_semantic.py

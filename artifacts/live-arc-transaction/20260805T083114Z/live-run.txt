@@ -1,0 +1,27 @@
+Safe4 live Arc Testnet run — sanitized allowlisted observations
+Observed 2026-08-05
+
+SAFE4_GOLDEN_PATH_START
+MODE=CIRCLE_AGENT_WALLET_LIVE
+SCENARIO=TASK_MATCH
+amount=0.01 USDC
+task_context_trust=request-supplied-untrusted
+VERDICT=ALLOWED
+reason_code=TASK_PURCHASE_MATCH
+settlement=RPC_VERIFIED
+transaction_hash=0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d
+block_number=55411369
+sender=0x3985a31e4e42a31e437c1099306decbe2f08da4d
+recipient=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+amount_usdc=0.010000
+execution_path=ERC_4337_AGENT_WALLET
+broadcast=SUBMITTED_AFTER_SAFE4_ALLOW
+live_broadcast_notice=FRESH_ARC_TESTNET_TRANSACTION_BROADCAST_AFTER_SAFE4_ALLOW
+SCENARIO=TASK_MISMATCH
+VERDICT=DENIED
+reason_code=PURCHASE_PURPOSE_MISMATCH
+demo_orchestrator_broadcast=NOT_INVOKED_AFTER_SAFE4_DENIED
+settlement_executor_calls_before=1
+settlement_executor_calls_after=1
+DENIED_DEMO_EXECUTOR_NOT_INVOKED=PASS
+SAFE4_GOLDEN_PATH_OK

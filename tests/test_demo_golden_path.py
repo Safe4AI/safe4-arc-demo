@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from scripts.demo_golden_path import SettlementExecutor
+from scripts.demo_golden_path import SettlementExecutor, _settlement_notice_lines
 
 
 def test_rpc_replay_verifies_existing_chain_evidence_without_broadcast() -> None:
@@ -53,11 +53,15 @@ def test_circle_live_verifies_agent_wallet_receipt_after_transfer() -> None:
         "SETTLEMENT_FROM": "0x1111111111111111111111111111111111111111",
         "SETTLEMENT_TO": "0x2222222222222222222222222222222222222222",
         "SETTLEMENT_AMOUNT_UNITS": "10000",
+        "SETTLEMENT_IDEMPOTENCY_KEY": "2b958204-6eb0-4e83-a655-20f187493e8c",
     }
     with (
         patch.dict(os.environ, env),
         patch("scripts.demo_golden_path.shutil.which", return_value="circle"),
-        patch("scripts.demo_golden_path.subprocess.run", return_value=completed),
+        patch(
+            "scripts.demo_golden_path.subprocess.run",
+            return_value=completed,
+        ) as subprocess_run,
         patch(
             "scripts.demo_golden_path._verify_circle_agent_wallet_transaction",
             return_value=evidence,
@@ -67,7 +71,29 @@ def test_circle_live_verifies_agent_wallet_receipt_after_transfer() -> None:
 
     assert result["mode"] == "CIRCLE_AGENT_WALLET_LIVE"
     assert result["broadcast"] == "SUBMITTED_AFTER_SAFE4_ALLOW"
+    transfer_command = subprocess_run.call_args.args[0]
+    assert transfer_command[transfer_command.index("--idempotency-key") + 1] == env[
+        "SETTLEMENT_IDEMPOTENCY_KEY"
+    ]
     verify.assert_called_once_with(transaction_hash)
+
+
+def test_circle_live_rejects_malformed_provider_idempotency_key() -> None:
+    env = {
+        "SETTLEMENT_FROM": "0x1111111111111111111111111111111111111111",
+        "SETTLEMENT_TO": "0x2222222222222222222222222222222222222222",
+        "SETTLEMENT_AMOUNT_UNITS": "10000",
+        "SETTLEMENT_IDEMPOTENCY_KEY": "not-a-uuid",
+    }
+    with (
+        patch.dict(os.environ, env),
+        patch("scripts.demo_golden_path.shutil.which", return_value="circle"),
+        patch("scripts.demo_golden_path.subprocess.run") as subprocess_run,
+    ):
+        with pytest.raises(RuntimeError, match="must be a UUIDv4"):
+            SettlementExecutor("circle-live").settle()
+
+    subprocess_run.assert_not_called()
 
 
 def test_circle_rpc_replay_verifies_existing_agent_wallet_evidence() -> None:
@@ -85,6 +111,17 @@ def test_circle_rpc_replay_verifies_existing_agent_wallet_evidence() -> None:
     assert result["mode"] == "CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY"
     assert result["broadcast"] == "EXISTING_CHAIN_EVIDENCE"
     verify.assert_called_once_with(transaction_hash)
+
+
+def test_settlement_notices_distinguish_live_broadcast_from_replay() -> None:
+    live_notice, live_policy = _settlement_notice_lines("circle-live")
+    replay_notice, replay_policy = _settlement_notice_lines("circle-rpc-replay")
+
+    assert "BROADCAST_AFTER_SAFE4_ALLOW" in live_notice
+    assert "NOT_BROADCAST" not in live_notice
+    assert live_policy == "CIRCLE_POLICY=INVOKED_ONCE_AFTER_SAFE4_ALLOW"
+    assert "NOT_BROADCAST_BY_THIS_DEMO" in replay_notice
+    assert replay_policy == "CIRCLE_POLICY=NOT_INVOKED_IN_RPC_REPLAY"
 
 
 def test_task_bound_output_discloses_request_supplied_trust_boundary() -> None:

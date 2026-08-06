@@ -1,0 +1,11 @@
+Circle authenticated transaction history - allowlisted fields only
+
+CIRCLE_HISTORY_EXIT=0
+CIRCLE_HISTORY_MATCHES=1
+state=COMPLETE
+blockchain=ARC-TESTNET
+operation=TRANSFER
+txHash=0x9dedac01a941059342cb0f907a45f8b64478b3309327202db327afee4f12061d
+
+Wallet transaction IDs, pagination data, session data, idempotency keys, and
+complete API responses are deliberately not retained.

@@ -83,9 +83,11 @@ Safe4 for the Circle Agent Marketplace.
 3. Open these tabs before recording:
    - deck in presentation mode;
    - terminal at repository root;
-   - [Fresh Circle Agent Wallet transaction](https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c).
+   - [5 August Circle Agent Wallet transaction](https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d).
 4. Increase terminal font until each stable marker remains readable at 1080p.
-5. Run `bash scripts/demo_circle_replay.sh` once off-camera as a network preflight.
+5. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\demo_circle_replay.ps1`
+   once off-camera as a read-only network preflight. On macOS/Linux, use
+   `bash scripts/demo_circle_replay.sh`.
 6. Clear the terminal, start recording, then run the same command once.
 
 ## Rehearsal checklist
@@ -100,13 +102,33 @@ Safe4 for the Circle Agent Marketplace.
 - [ ] Final take is between 2:40 and 2:55.
 - [ ] Export at 1080p; verify the final file with `ffprobe`.
 
+## Optional edge-case evidence
+
+Run the local-only matrix described in
+`docs/hackathon/EDGE_CASE_TRANSACTION_EVIDENCE_PROMPT.md` off-camera before the
+final take. Use its sanitized summary as backup evidence or a single results
+screenshot; do not crowd the three-minute demo with every case. The matrix is
+authorization evidence, not a set of fresh blockchain transactions. Present
+it as positive evidence only after independent review; never omit a failed
+red-team canary to improve the displayed result.
+
+The reviewed run is
+`artifacts/transaction-edge-cases/20260805T011517Z/summary.md`: 22/22 required
+authorization scenarios and 8/8 local verifier fixtures passed, while 0/3
+adversarial canaries achieved the desired denial. If shown, state the three
+known gaps in the same frame as the positive counts.
+
 ## Backup evidence
 
 - Transaction:
-  `0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c`
+  `0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d`
 - Explorer:
-  <https://testnet.arcscan.app/tx/0x648ef14e4da7c6bfecce0017d19280ed51fb12635bea94712de926d9f967752c>
-- Arc evidence document: `docs/ARC_TESTNET_EVIDENCE.md`
+  <https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d>
+- Current Arc/Circle evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`
 - Committed demo transcript: `docs/hackathon/DEMO_TRANSCRIPT.txt`
 - Sanitized live execution evidence: `docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT.txt`
+- 5 August sanitized live evidence:
+  `docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT_20260805.txt`
 - Raw regression evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`
+- Reviewed edge-case summary:
+  `artifacts/transaction-edge-cases/20260805T011517Z/summary.md`

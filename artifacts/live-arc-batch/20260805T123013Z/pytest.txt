@@ -1,0 +1,22 @@
+Pre-execution verification from the clean canonical public checkout
+
+Command:
+..\..\.python313\python.exe -m pytest -q tests\test_demo_page.py tests\test_demo_x402_flow.py tests\test_demo_judge_scenarios.py tests\test_demo_live_arc_batch.py tests\test_demo_live_arc_batch_fixed.py tests\test_demo_golden_path.py tests\test_arc_settlement_verifier.py
+
+Result:
+97 passed, 7 warnings, 24 subtests passed in 15.16s
+
+Prepared export audit before the Git checkpoint:
+PUBLIC_AUDIT_OK files=158 required=11 secrets=0 forbidden=0
+
+Clean execution-commit audit after all new files became tracked:
+PUBLIC_AUDIT_OK files=164 required=11 secrets=0 forbidden=0
+
+Documentation check:
+markdown files scanned: 27
+fixed links: 0
+issues found: 0
+
+Additional live-batch gate before packaging:
+81 passed, 1 existing Starlette deprecation warning
+py_compile: PASS

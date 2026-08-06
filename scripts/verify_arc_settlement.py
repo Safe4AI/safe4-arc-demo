@@ -151,7 +151,13 @@ def verify_circle_agent_wallet_payloads(
     recipient: str,
     native_amount_units: int,
 ) -> int:
-    """Verify an ERC-4337 Agent Wallet transfer from its receipt evidence."""
+    """Verify an ERC-4337 Agent Wallet transfer from its receipt evidence.
+
+    Circle Agent Wallets submit through an ERC-4337 EntryPoint, so the
+    top-level transaction sender and target are the bundler and EntryPoint.
+    The wallet, recipient, amount, and successful user operation must instead
+    be proven from the receipt's indexed events.
+    """
 
     expected_hash = validate_transaction_hash(transaction_hash)
     expected_entrypoint = validate_address(
@@ -225,8 +231,28 @@ def verify_circle_agent_wallet_payloads(
     return parse_hex_int(receipt.get("blockNumber"), label="receipt block number")
 
 
+def scale_amount_units(amount_units: int, source_decimals: int, target_decimals: int) -> int:
+    """Scale an exact token amount between decimal representations."""
+    if amount_units <= 0:
+        raise ArcSettlementError("amount_units must be positive")
+    if source_decimals < 0 or target_decimals < 0:
+        raise ArcSettlementError("token decimals must be non-negative")
+    if target_decimals >= source_decimals:
+        return amount_units * (10 ** (target_decimals - source_decimals))
+    divisor = 10 ** (source_decimals - target_decimals)
+    quotient, remainder = divmod(amount_units, divisor)
+    if remainder:
+        raise ArcSettlementError("amount cannot be represented exactly at target decimals")
+    return quotient
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--mode",
+        choices=("direct", "circle-agent-wallet"),
+        default="direct",
+    )
     parser.add_argument("--rpc-url", required=True)
     parser.add_argument("--chain-id", required=True, type=int)
     parser.add_argument("--usdc-address", required=True)
@@ -234,6 +260,10 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--sender", required=True)
     parser.add_argument("--recipient", required=True)
     parser.add_argument("--amount-units", required=True, type=int)
+    parser.add_argument("--usdc-decimals", type=int, default=6)
+    parser.add_argument("--entrypoint-address")
+    parser.add_argument("--native-usdc-address")
+    parser.add_argument("--native-usdc-decimals", type=int, default=18)
     return parser.parse_args()
 
 
@@ -261,17 +291,39 @@ def main() -> int:
                 "eth_getTransactionReceipt",
                 [args.tx_hash],
             )
-        block_number = verify_settlement_payloads(
-            transaction,
-            receipt,
-            transaction_hash=args.tx_hash,
-            usdc_address=args.usdc_address,
-            sender=args.sender,
-            recipient=args.recipient,
-            amount_units=args.amount_units,
-        )
+        if args.mode == "circle-agent-wallet":
+            if not args.entrypoint_address or not args.native_usdc_address:
+                raise ArcSettlementError(
+                    "circle-agent-wallet mode requires entrypoint and native USDC addresses"
+                )
+            native_amount_units = scale_amount_units(
+                args.amount_units,
+                args.usdc_decimals,
+                args.native_usdc_decimals,
+            )
+            block_number = verify_circle_agent_wallet_payloads(
+                transaction,
+                receipt,
+                transaction_hash=args.tx_hash,
+                entrypoint_address=args.entrypoint_address,
+                native_usdc_address=args.native_usdc_address,
+                sender=args.sender,
+                recipient=args.recipient,
+                native_amount_units=native_amount_units,
+            )
+        else:
+            block_number = verify_settlement_payloads(
+                transaction,
+                receipt,
+                transaction_hash=args.tx_hash,
+                usdc_address=args.usdc_address,
+                sender=args.sender,
+                recipient=args.recipient,
+                amount_units=args.amount_units,
+            )
         print(
             "ARC_SETTLEMENT_OK "
+            f"mode={args.mode} "
             f"tx={args.tx_hash} from={args.sender} to={args.recipient} "
             f"amount_units={args.amount_units} block={block_number}"
         )

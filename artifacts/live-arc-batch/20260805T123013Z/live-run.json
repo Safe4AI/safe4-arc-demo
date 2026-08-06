@@ -1,0 +1,155 @@
+{
+  "batch": {
+    "atomic": false,
+    "batch_id": "safe4-fixed-x402-demo-v1",
+    "chain": "ARC-TESTNET",
+    "chain_id": 5042002,
+    "counts": {
+      "authorized": 3,
+      "denied": 0,
+      "failed": 0,
+      "planned": 3,
+      "skipped": 0,
+      "submitted": 3,
+      "unknown": 0,
+      "verified": 3
+    },
+    "currency": "USDC",
+    "execution_model": "SEQUENTIAL_NON_ATOMIC_STOP_ON_FIRST_FAILURE",
+    "hard_caps": {
+      "max_batch_amount_units": 10000,
+      "max_item_amount_units": 5000,
+      "max_items": 3
+    },
+    "items": [
+      {
+        "amount_units": 1000,
+        "amount_usdc": "0.001000",
+        "binding_hash": "22415ef5487e0a655092c366af4d45f1b6be6332d9af54a530b6c718e11a6bb9",
+        "block_number": 55439625,
+        "chain": "ARC-TESTNET",
+        "chain_id": 5042002,
+        "currency": "USDC",
+        "error_code": null,
+        "item_id": "market-data",
+        "outcome": "VERIFIED",
+        "reason_code": "TASK_PURCHASE_MATCH",
+        "recipient": "0x530271da8cc4e44375f22ad9632bc61a55382f88",
+        "safe4_status": "AUTHORIZED",
+        "safe4_transaction_id": "71ffecd70b4d4e819ddfb634cf798944",
+        "sequence": 1,
+        "submission_status": "SUBMITTED",
+        "transaction_hash": "0x0f15d296afbefcd20c0b074c36f6ccc914020825af125c6f2e8b9af97a066145",
+        "verification_status": "VERIFIED"
+      },
+      {
+        "amount_units": 2000,
+        "amount_usdc": "0.002000",
+        "binding_hash": "08997e442d088e4628ac47ef664c8fc1ecbac1007bc8e6022c8e1997a9f6ec62",
+        "block_number": 55439642,
+        "chain": "ARC-TESTNET",
+        "chain_id": 5042002,
+        "currency": "USDC",
+        "error_code": null,
+        "item_id": "compute",
+        "outcome": "VERIFIED",
+        "reason_code": "TASK_PURCHASE_MATCH",
+        "recipient": "0x530271da8cc4e44375f22ad9632bc61a55382f88",
+        "safe4_status": "AUTHORIZED",
+        "safe4_transaction_id": "edab4c4d6dc84b20a1aba4a36fe1b158",
+        "sequence": 2,
+        "submission_status": "SUBMITTED",
+        "transaction_hash": "0x29df57bf6ca1520034f22b6137c9f027c2f7610aebb0067ff6784593665bce4d",
+        "verification_status": "VERIFIED"
+      },
+      {
+        "amount_units": 3000,
+        "amount_usdc": "0.003000",
+        "binding_hash": "0c2cd3ca4970b2c827e927b04085c606d4703397039eb92bc9eab5d4a2cd59f6",
+        "block_number": 55439658,
+        "chain": "ARC-TESTNET",
+        "chain_id": 5042002,
+        "currency": "USDC",
+        "error_code": null,
+        "item_id": "agent-memory",
+        "outcome": "VERIFIED",
+        "reason_code": "TASK_PURCHASE_MATCH",
+        "recipient": "0x530271da8cc4e44375f22ad9632bc61a55382f88",
+        "safe4_status": "AUTHORIZED",
+        "safe4_transaction_id": "232dc587cddc4ccbaf440bc0fcc98bcb",
+        "sequence": 3,
+        "submission_status": "SUBMITTED",
+        "transaction_hash": "0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27",
+        "verification_status": "VERIFIED"
+      }
+    ],
+    "plan_hash": "8c8b2db55c18a12950ace4f73ea659ae0db585d65600ab491f11ca8f0adb8154",
+    "schema_version": "safe4-live-arc-batch-evidence-v1",
+    "terminal_status": "COMPLETE",
+    "totals": {
+      "planned_amount_units": 6000,
+      "verified_amount_units": 6000
+    }
+  },
+  "circle_cli": {
+    "authenticated_wallet_preflight": {
+      "address": "0x3985a31e4e42a31e437c1099306decbe2f08da4d",
+      "blockchain": "ARC-TESTNET",
+      "raw_command_output_retained": false,
+      "source": "AUTHENTICATED_CIRCLE_CLI_WALLET_LIST",
+      "status": "VERIFIED"
+    },
+    "command_reported_version": "0.0.6",
+    "raw_command_output_retained": false
+  },
+  "ended_at_utc": "2026-08-05T12:30:46Z",
+  "fixed_settlement": {
+    "amount_units": [
+      1000,
+      2000,
+      3000
+    ],
+    "chain": "ARC-TESTNET",
+    "chain_id": 5042002,
+    "currency": "USDC",
+    "recipient": "0x530271da8cc4e44375f22ad9632bc61a55382f88",
+    "rpc_url": "https://rpc.testnet.arc.network",
+    "sender": "0x3985a31e4e42a31e437c1099306decbe2f08da4d",
+    "total_amount_units": 6000
+  },
+  "public_balance_observations": {
+    "interpretation": "PRE_IS_A_REQUIRED_GO_GATE_POST_IS_OPTIONAL_CONTEXT_NOT_SETTLEMENT_PROOF",
+    "post": {
+      "block_number": 55439666,
+      "block_tag": "0x34df132",
+      "chain_id": 5042002,
+      "recipient_balance_base_units": "46000000000000000",
+      "sender_balance_base_units": "19964000000000000000",
+      "stage": "POST",
+      "status": "OBSERVED",
+      "unit": "ARC_NATIVE_USDC_18_DECIMAL_BASE_UNITS"
+    },
+    "pre": {
+      "block_number": 55439614,
+      "block_tag": "0x34df0fe",
+      "chain_id": 5042002,
+      "recipient_balance_base_units": "40000000000000000",
+      "sender_balance_base_units": "19970000000000000000",
+      "stage": "PRE",
+      "status": "OBSERVED",
+      "unit": "ARC_NATIVE_USDC_18_DECIMAL_BASE_UNITS"
+    },
+    "required_pre_sender_balance_base_units": "100000000000000000"
+  },
+  "recipient_policy": {
+    "coordinator": "FIXED_CODE_REVIEWED_ALLOWLIST_ENFORCED_BEFORE_EACH_SUBMISSION",
+    "safe4_payment_policy": "NOT_A_GENERAL_SAFE4_RECIPIENT_ALLOWLIST_ENFORCEMENT_CLAIM"
+  },
+  "schema_version": "safe4-live-arc-fixed-run-evidence-v1",
+  "source": {
+    "revision": "a2831a76e37e0e45e1d3e5d142484af5d2d12c63",
+    "worktree_state": "CLEAN"
+  },
+  "started_at_utc": "2026-08-05T12:30:13Z",
+  "x402_boundary": "LOCAL_SAFE4_RECEIPT_FIXTURE_FOR_AUTHORIZATION_NOT_AN_EXTERNAL_X402_PAYMENT"
+}
