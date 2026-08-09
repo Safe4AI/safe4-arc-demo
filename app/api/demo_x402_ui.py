@@ -267,6 +267,20 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
     .evidence-lane p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
     .evidence-link { color: var(--signal); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-underline-offset: 3px; text-transform: uppercase; }
 
+    .integrate { margin-top: 12px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--line-soft); }
+    .integrate summary { color: var(--signal); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
+    .integrate pre {
+      margin: 8px 0 0;
+      padding: 10px 12px;
+      overflow-x: auto;
+      background: var(--panel);
+      border: 1px solid var(--line-soft);
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+    .integrate code { font-family: inherit; }
+
     @media (max-width: 1080px) {
       .topbar { grid-template-columns: 1fr auto; }
       .top-status { display: none; }
@@ -371,6 +385,23 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       <a class="evidence-link" href="https://github.com/Safe4AI/safe4-arc-demo/tree/agent/live-arc-evidence/artifacts/live-arc-batch/20260805T123013Z" target="_blank" rel="noreferrer noopener">3-transfer evidence bundle ↗</a>
       <a class="evidence-link" href="https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27" target="_blank" rel="noreferrer noopener">Latest 0.003 USDC proof ↗</a>
     </section>
+
+    <section class="integrate" aria-label="Integrate Safe4">
+      <details>
+        <summary>Call Safe4 from your own machine</summary>
+        <p class="boundary">Everything this page does is a public HTTP call. The sequence is OAuth authorization-code with PKCE, then <code>POST /pay</code> without proof to receive the x402 challenge, then <code>POST /pay</code> again with the proof header. Safe4 returns a decision; it never signs or broadcasts.</p>
+        <p class="boundary">Run the same flow from a terminal against this deployment:</p>
+        <pre><code>git clone https://github.com/Safe4AI/safe4-arc-demo
+cd safe4-arc-demo &amp;&amp; pip install httpx
+
+python examples/safe4_quickstart.py \
+  --base-url <span id="integrateBase">https://demo.safe4.ai</span> \
+  --access-token &lt;token from this page's URL&gt; \
+  --task "Research competitor pricing using a paid company data service." \
+  --purpose "Generate a competitor pricing research brief from company data."</code></pre>
+        <p class="boundary">Change only <code>--purpose</code> and run it again. The amount, service category and counterparty are identical; the decision is not. Exit code is <code>0</code> on allow and <code>2</code> on deny, so it drops straight into a pipeline.</p>
+      </details>
+    </section>
   </main>
 
   <script>
@@ -378,6 +409,9 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       "use strict";
 
       const accessGate = new URLSearchParams(window.location.search).get("access_token") || "";
+      // Show the integration snippet against whichever host actually served this page.
+      const integrateBase = document.getElementById("integrateBase");
+      if (integrateBase) integrateBase.textContent = window.location.origin;
       const connectButton = document.getElementById("connectButton");
       const runButton = document.getElementById("runButton");
       const connectionNote = document.getElementById("connectionNote");
