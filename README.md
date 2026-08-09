@@ -17,6 +17,17 @@ real decision. See
 [`docs/hackathon/JUDGE_DEMO_RUNBOOK.md`](docs/hackathon/JUDGE_DEMO_RUNBOOK.md)
 for a 90-second walkthrough and the exact evidence boundaries.
 
+## Connect your own agent
+
+Safe4 is also reachable outside the browser: any agent can point an
+x402-shaped client at it and get a real challenge/proof/decision loop. See
+[`docs/x402/CONTRACT.md`](docs/x402/CONTRACT.md) for the full protocol,
+[`sdk/python/safe4_client.py`](sdk/python/safe4_client.py) for a small
+dependency-light client, and
+[`examples/third_party_agent_demo.py`](examples/third_party_agent_demo.py)
+for a worked example that gets one ALLOW and one DENY from the live
+deployment.
+
 ## Current verified status
 
 As of 9 August 2026:
@@ -45,6 +56,9 @@ As of 9 August 2026:
 - a separate presenter-operated, admin-gated live settlement lane (not part
   of this judged build; see `docs/hackathon/CLAIM_LEDGER.md`) settled and
   RPC-verified a further `0.001 USDC` Arc Testnet transfer on 9 August 2026
+- a third-party agent using only the published SDK got one real ALLOW and
+  one real DENY from the live deployment outside the browser, verified on
+  9 August 2026
 
 The midpoint milestone was 27 July 2026. Integration ran 27–31 July, proof
 ran 1–8 August, and final submission is due Monday 10 August 2026, 13:59
