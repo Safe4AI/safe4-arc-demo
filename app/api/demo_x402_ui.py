@@ -306,6 +306,7 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       <button class="scenario-card" type="button" data-scenario="scope_deny" aria-pressed="false"><span class="scenario-index">04 / AUTONOMY</span><span class="scenario-name">Scope cap exceeded</span><span class="scenario-outcome">Expected deny</span></button>
       <button class="scenario-card" type="button" data-scenario="receipt_replay" aria-pressed="false"><span class="scenario-index">05 / PROOF</span><span class="scenario-name">Used receipt replay</span><span class="scenario-outcome">Expected block</span></button>
       <button class="scenario-card" type="button" data-scenario="idempotent_retry" aria-pressed="false"><span class="scenario-index">06 / RETRY</span><span class="scenario-name">Idempotent duplicate</span><span class="scenario-outcome">Expected safe replay</span></button>
+      <button class="scenario-card" type="button" data-scenario="open_challenge" aria-pressed="false"><span class="scenario-index">07 / OPEN</span><span class="scenario-name">Write your own</span><span class="scenario-outcome">Any outcome</span></button>
     </nav>
 
     <section class="workspace" aria-label="Safe4 x402 judge lab">
@@ -470,6 +471,17 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
           expectedStatus: 200,
           expectedReason: "TASK_PURCHASE_MATCH",
           editable: false,
+          items: [companyItem()],
+        },
+        open_challenge: {
+          title: "Open challenge · write your own",
+          summary: "Edit the task and the proposed purchase to anything you like, then run it. This lane asserts no expected outcome: it reports whatever Safe4 actually decided, including the reason code and the concepts the matcher used. Matching is deterministic concept matching over request-supplied text, so text you control on both sides can be made to agree with itself.",
+          pattern: "Operator-supplied task and purchase",
+          mode: "single",
+          expectedStatus: null,
+          expectedReason: "ANY",
+          editable: true,
+          freeform: true,
           items: [companyItem()],
         },
       });
@@ -736,6 +748,9 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       }
 
       function requireObservation(observed, scenario) {
+        // The open lane is exploratory: any outcome is a valid observation, so
+        // it must never be treated as a scenario failure.
+        if (scenario.freeform) return;
         if (observed.status !== scenario.expectedStatus || observed.code !== scenario.expectedReason) {
           throw new Error(`Expected ${scenario.expectedStatus} ${scenario.expectedReason}; observed ${observed.status} ${observed.code}.`);
         }
