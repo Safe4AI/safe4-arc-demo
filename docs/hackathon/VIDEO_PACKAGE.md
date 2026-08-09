@@ -2,9 +2,17 @@
 
 Target: **2:45–2:55**, maximum **3:00**. Record on Arc Testnet only.
 
+This is the current run sheet, centered on the ALLOW/DENY verdict flip, the
+open challenge lane, a live settlement that stops at step one on a denial
+and completes with a real hash on an allow, and a few seconds showing the
+SDK reaching Safe4 from outside the browser. It replaces the earlier
+Circle-Agent-Wallet-replay script; that older recorded evidence remains
+valid historical proof (see `docs/hackathon/VERIFICATION_EVIDENCE.md`) but
+is no longer the video's spine.
+
 ## Spoken script
 
-**0:00–0:30 — problem**
+**0:00–0:25 — problem**
 
 AI agents can now discover services, hold wallets, and pay autonomously. But
 there is a security gap between an agent deciding to spend and the money
@@ -12,68 +20,66 @@ moving. A wallet can enforce an amount limit or block an address, yet still
 approve the wrong purchase for the task. Safe4 is built for that missing
 decision point.
 
-**0:30–0:50 — Safe4 in one sentence**
+**0:25–0:45 — Safe4 in one sentence**
 
-Safe4 is a payment firewall for AI agents: the security layer between the agent
-deciding to spend and execution. It evaluates submitted task context, proposed
-purchase, amount, counterparty, autonomy scope, policy, and payment proof, then
-returns an auditable allow or deny reason.
+Safe4 is a payment firewall for AI agents: the security layer between the
+agent deciding to spend and execution. It evaluates the submitted task,
+proposed purchase, amount, counterparty, autonomy scope, and payment proof,
+then returns an auditable allow or deny with a reason.
 
-**0:50–2:20 — live demo**
+**0:45–1:15 — the verdict flip**
 
-Here the agent has one task: research competitor pricing using a paid company
-data service. The proposed purchase is a competitor-pricing research brief for
-zero point zero one USDC. It is within budget, the category is allowed, and the
-purchase purpose matches the task.
+Here the agent has one task: research competitor pricing using a paid
+company data service. The proposed purchase matches that task. I select it
+and run it. Safe4 returns ALLOW, reason `TASK_PURCHASE_MATCH`.
 
-I run one command: `bash scripts/demo_circle_replay.sh`.
+Now the agent proposes a gift card for an unrelated giveaway. The amount,
+the service category, and the counterparty are unchanged. Only the purpose
+changed. Safe4 returns DENY, reason `PURCHASE_PURPOSE_MISMATCH`. Same money,
+different answer.
 
-Safe4 returns ALLOWED with the reason `TASK_PURCHASE_MATCH`. The safe replay
-mode then asks Arc Testnet RPC to verify the fresh Circle Agent Wallet
-transaction. It checks chain ID 5042002, the ERC-4337 EntryPoint target, a
-successful UserOperation for the wallet, and the exact native-USDC sender,
-recipient, and 18-decimal amount event before normalizing it to 0.01 USDC.
-The transaction hash appears in the demo evidence bundle and opens in the
-Arc explorer. This command re-verifies the earlier live transfer; it does not
-broadcast another one.
+**1:15–1:35 — the open challenge**
 
-Now the agent proposes a gift card for an unrelated entertainment giveaway.
-The amount, service category, and counterparty are unchanged. Circle policy is
-not invoked in replay. Safe4 returns DENIED with
-`PURCHASE_PURPOSE_MISMATCH`: the amount and category are permitted, but the
-purchase does not match the submitted task context. The unchanged executor
-call count shows this demo orchestrator did not invoke settlement for the
-denied branch.
+This scenario isn't predeclared. I'll type a task and a purchase myself,
+right now, live, and Safe4 reports whatever it actually decides — nothing
+here is scripted to a known outcome.
 
-**2:20–2:45 — Arc and Circle**
+**1:35–2:15 — live settlement**
 
-Arc gives us a payment-native test environment and exact onchain USDC evidence.
-Circle Agent Stack gives agents wallet execution and native guardrails. Safe4
-does not replace those controls. Circle enforces the floor; Safe4 decides
-whether this payment should happen at all. After an ALLOWED decision, the
-authenticated Agent Wallet settled 0.01 testnet USDC on Arc. Safe4 then
-RPC-verified the ERC-4337 receipt, exact recipient, and amount.
+This lane runs the same Safe4 decision, but on ALLOW it broadcasts one real
+USDC transfer on Arc Testnet. Watch what happens on a denial first: Safe4's
+decision is the first step, and the feed stops right there — nothing is
+built, signed, or sent. Now the matching purchase: the feed completes all
+five steps, and this hash is real — I can open it on Arc Testnet right now.
 
-**2:45–2:55 — team and path**
+**2:15–2:25 — reachable outside the browser**
 
-Our team brings 35 combined years across cybersecurity and finance in regulated
-environments. Today the task context is request-supplied. The accelerator helps
-us bind it to trusted principals, validate with design partners, and prepare
-Safe4 for the Circle Agent Marketplace.
+Safe4 isn't only a page you click. Here's an external agent using our
+published SDK, no browser involved: it proposes the same matching purchase
+and gets ALLOW, then the same mismatch and gets DENY, straight from the
+command line against this deployment.
+
+**2:25–2:45 — Arc and team**
+
+Arc gives us a payment-native test environment and exact on-chain evidence.
+Our team brings 35 combined years across cybersecurity and finance in
+regulated environments. Today the task context is request-supplied; the
+accelerator helps us bind it to trusted principals and validate with design
+partners.
 
 ## Shot-by-shot run sheet
 
 | Time | Picture | Action / caption |
 |---|---|---|
-| 0:00–0:30 | Slide 2 | Caption: “A valid wallet action can still be the wrong action.” |
-| 0:30–0:50 | Slide 1, then slide 4 | Caption: “Payment firewall for AI agents.” |
-| 0:50–1:00 | Terminal at repo root | Show `bash scripts/demo_circle_replay.sh` before pressing Enter. |
-| 1:00–1:35 | Terminal allowed block | Hold on task, amount, checks, `VERDICT=ALLOWED`, and reason. |
-| 1:35–1:52 | Terminal transaction lines | Hold on `settlement=RPC_VERIFIED` and the full hash. |
-| 1:52–2:02 | Arcscan transaction tab | Show Arc Testnet badge and successful USDC transfer; caption “historical replay evidence.” |
-| 2:02–2:20 | Terminal denied block | Hold on `VERDICT=DENIED`, mismatch reason, unchanged inputs, and executor call count. |
-| 2:20–2:45 | Slides 5, 7, 8 | Caption: “Circle floor + Safe4 task-aware decision.” |
-| 2:45–2:55 | Slides 9 and 10 | Team fact and marketplace-readiness roadmap. |
+| 0:00–0:25 | Slide 2 | Caption: "A valid wallet action can still be the wrong action." |
+| 0:25–0:45 | Slide 1, then slide 4 | Caption: "Payment firewall for AI agents." |
+| 0:45–1:00 | Browser: tile 01, run | Hold on green `ALLOW` / `TASK_PURCHASE_MATCH` for a beat. |
+| 1:00–1:15 | Browser: tile 03, run | Hold on red `DENY` / `PURCHASE_PURPOSE_MISMATCH` for a beat. |
+| 1:15–1:35 | Browser: tile 07, type task + purpose, run | Show the real decision appearing live, no predeclared outcome. |
+| 1:35–1:50 | Browser: live-settlement lane, mismatched scenario selected, click "Authorize & settle live" | Feed stops at step 1, "DENIED ... nothing was built, signed, or broadcast." |
+| 1:50–2:15 | Browser: live-settlement lane, matching scenario selected, click "Authorize & settle live" | All 5 feed steps complete; hold on the real tx hash and open it on Arcscan. |
+| 2:15–2:25 | Terminal: `python examples/third_party_agent_demo.py ...` | Scroll to show ALLOW then DENY output from outside the browser. |
+| 2:25–2:45 | Slides 8, 9, 10 | Arc/team/close. |
 
 ## Exact recording setup
 
@@ -82,53 +88,48 @@ Safe4 for the Circle Agent Marketplace.
    `requirements-dev.txt` and `requirements-arc.txt`.
 3. Open these tabs before recording:
    - deck in presentation mode;
-   - terminal at repository root;
-   - [5 August Circle Agent Wallet transaction](https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d).
-4. Increase terminal font until each stable marker remains readable at 1080p.
-5. Run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\demo_circle_replay.ps1`
-   once off-camera as a read-only network preflight. On macOS/Linux, use
-   `bash scripts/demo_circle_replay.sh`.
-6. Clear the terminal, start recording, then run the same command once.
+   - terminal at repository root, ready to run
+     `python examples/third_party_agent_demo.py --base-url https://demo.safe4.ai --demo-access-token <judge token>`;
+   - the live judge page, `?live_admin=<value>` already appended (see
+     `docs/hackathon/VIDEO_RECORDING_GUIDE.md` for how to fetch that value
+     without ever writing it down).
+4. Increase terminal font until each stable marker remains readable at
+   1080p.
+5. Run through the whole sequence once off-camera so the live-settlement
+   lane's two transactions (denial, then allow) are fresh in your memory —
+   the allow will broadcast a real transfer, so do this run for real once,
+   then do it again on camera. Two live transfers per recording session is
+   fine; the caps are `0.01 USDC` per transaction and `0.10 USDC` per day.
+6. Clear the terminal, start recording, then run the sequence once.
 
 ## Rehearsal checklist
 
 - [ ] Desktop notifications and unrelated browser tabs are closed.
-- [ ] No `.env`, private key, wallet credential, email, or OTP is visible.
-- [ ] Terminal shows `MODE=CIRCLE_AGENT_WALLET_RPC_VERIFIED_REPLAY`.
-- [ ] Allowed and denied reasons fit on screen without horizontal scrolling.
-- [ ] Arcscan visibly says Testnet and the hash matches the terminal.
-- [ ] The script says the replay did not broadcast a fresh transfer.
-- [ ] Circle Agent Wallet claim is limited to the verified Arc Testnet transfer.
+- [ ] No `.env`, private key, admin secret, wallet credential, email, or OTP
+      is visible — including in the URL bar (`?live_admin=` must never be
+      shown on camera; crop or zoom past it).
+- [ ] The green `ALLOW` and red `DENY` from the verdict-flip step are both
+      readable.
+- [ ] The open-challenge result is visibly typed live, not a predeclared
+      tile.
+- [ ] The live-settlement feed visibly stops at step 1 on the denial run.
+- [ ] The live-settlement feed visibly completes all 5 steps with a real
+      hash on the allow run, and the hash opens on Arcscan as Testnet.
+- [ ] The SDK terminal segment shows both an ALLOW and a DENY.
 - [ ] Final take is between 2:40 and 2:55.
 - [ ] Export at 1080p; verify the final file with `ffprobe`.
 
-## Optional edge-case evidence
-
-Run the local-only matrix described in
-`docs/hackathon/EDGE_CASE_TRANSACTION_EVIDENCE_PROMPT.md` off-camera before the
-final take. Use its sanitized summary as backup evidence or a single results
-screenshot; do not crowd the three-minute demo with every case. The matrix is
-authorization evidence, not a set of fresh blockchain transactions. Present
-it as positive evidence only after independent review; never omit a failed
-red-team canary to improve the displayed result.
-
-The reviewed run is
-`artifacts/transaction-edge-cases/20260805T011517Z/summary.md`: 22/22 required
-authorization scenarios and 8/8 local verifier fixtures passed, while 0/3
-adversarial canaries achieved the desired denial. If shown, state the three
-known gaps in the same frame as the positive counts.
-
 ## Backup evidence
 
-- Transaction:
-  `0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d`
-- Explorer:
-  <https://testnet.arcscan.app/tx/0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d>
-- Current Arc/Circle evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`
-- Committed demo transcript: `docs/hackathon/DEMO_TRANSCRIPT.txt`
-- Sanitized live execution evidence: `docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT.txt`
-- 5 August sanitized live evidence:
+- Live settlement transactions:
+  `0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540`,
+  `0xe9cf81485fac6f0b2158040acdab7364328809b0820239fce20e214cbc100db4`
+- Current Arc evidence and claim boundaries: `docs/hackathon/VERIFICATION_EVIDENCE.md`,
+  `docs/hackathon/CLAIM_LEDGER.md`
+- SDK and contract: `docs/x402/CONTRACT.md`, `sdk/python/safe4_client.py`,
+  `examples/third_party_agent_demo.py`
+- Prior Circle Agent Wallet replay evidence (no longer the video's spine,
+  still valid historical proof): `docs/hackathon/DEMO_TRANSCRIPT.txt`,
   `docs/hackathon/LIVE_CIRCLE_EXECUTION_TRANSCRIPT_20260805.txt`
-- Raw regression evidence: `docs/hackathon/VERIFICATION_EVIDENCE.md`
 - Reviewed edge-case summary:
   `artifacts/transaction-edge-cases/20260805T011517Z/summary.md`
