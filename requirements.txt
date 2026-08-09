@@ -2,3 +2,8 @@ fastapi>=0.115,<1.0
 httpx>=0.28,<1.0
 psycopg[binary]>=3.2,<4.0
 uvicorn[standard]>=0.32,<1.0
+
+# Required by the admin-gated live settlement lane in app/api/demo_live.py.
+# That lane stays inert unless ARC_PRIVATE_KEY and a live admin secret are both
+# set, but the import must resolve wherever the application is deployed.
+eth-account>=0.13,<1.0
