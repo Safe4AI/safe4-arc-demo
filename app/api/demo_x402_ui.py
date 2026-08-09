@@ -1,9 +1,15 @@
 """Judge-facing x402 authorization lab.
 
-The browser flow is deliberately authorization-only. It exercises Safe4's
-local ``/pay`` path and guarded signed-receipt fixture, but it never connects a
-wallet, signs, broadcasts, or presents historical Arc evidence as a fresh
-transaction.
+The seven predeclared/open scenarios are deliberately authorization-only.
+They exercise Safe4's local ``/pay`` path and guarded signed-receipt
+fixture, but never connect a wallet, sign, broadcast, or present historical
+Arc evidence as a fresh transaction.
+
+The page also has one additive, distinctly labelled "Connect your wallet"
+lane (backed by ``app/api/demo_wallet.py``) where a visitor's own EIP-1193
+wallet signs and broadcasts a real Arc Testnet transfer after Safe4 returns
+ALLOW. That lane never gives Safe4 a wallet key -- there is no private key
+for it anywhere on this server.
 """
 
 from __future__ import annotations
@@ -293,6 +299,32 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
     .live-hash { margin-top: 8px; font-size: 11px; word-break: break-all; }
     .live-hash a { color: var(--signal); }
 
+    .wallet-lane { margin-top: 12px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--ok, #9ad86a); }
+    .wallet-lane .label { color: var(--ok, #9ad86a); }
+    .wallet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .wallet-button {
+      padding: 9px 16px;
+      background: var(--ok, #9ad86a);
+      color: #12130d;
+      border: 0;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .wallet-button:disabled { opacity: .55; cursor: wait; }
+    .wallet-account { margin-top: 6px; font-size: 10px; color: var(--muted); word-break: break-all; }
+    .wallet-feed { margin: 10px 0 0; padding: 0; list-style: none; font-size: 11px; }
+    .wallet-feed li { display: flex; gap: 8px; padding: 3px 0; color: var(--muted); }
+    .wallet-feed li[data-state="active"] { color: var(--ink); }
+    .wallet-feed li[data-state="done"] { color: var(--ok, #9ad86a); }
+    .wallet-feed li[data-state="failed"] { color: var(--bad, #ff6b6b); }
+    .wallet-feed .tick { width: 14px; flex: 0 0 14px; }
+    .wallet-hash { margin-top: 8px; font-size: 11px; word-break: break-all; }
+    .wallet-hash a { color: var(--ok, #9ad86a); }
+
     .integrate { margin-top: 12px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--line-soft); }
     .integrate summary { color: var(--signal); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
     .integrate pre {
@@ -402,7 +434,7 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
         </div>
 
         <div class="evidence-grid" id="evidenceGrid" aria-label="Sanitized observations"></div>
-        <details><summary>Evidence boundary</summary><p class="boundary">This page runs Safe4's local <code>/pay</code> authorization path and a guarded signed-receipt fixture. It does not connect a wallet, sign, broadcast, RPC-verify, prove principal-bound intent, or demonstrate Circle Gateway settlement. Batch means independent requests, not atomic settlement.</p></details>
+        <details><summary>Evidence boundary</summary><p class="boundary">These seven scenarios run Safe4's local <code>/pay</code> authorization path and a guarded signed-receipt fixture. They do not connect a wallet, sign, broadcast, RPC-verify, prove principal-bound intent, or demonstrate Circle Gateway settlement. Batch means independent requests, not atomic settlement. The separate "Connect your wallet" lane below is the one exception: it does connect a wallet, sign, broadcast, and RPC-verify, using a visitor-held key Safe4 never sees.</p></details>
       </div>
     </section>
 
@@ -422,6 +454,19 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       </div>
       <ol class="live-feed" id="liveFeed"></ol>
       <div class="live-hash" id="liveHash"></div>
+    </section>
+
+    <section class="wallet-lane" aria-label="Connect your own wallet">
+      <div class="wallet-head">
+        <div>
+          <span class="label">Connect your wallet · experimental</span>
+          <p class="boundary">Runs the same Safe4 authorization on the selected scenario. On ALLOW, <strong>your own connected wallet</strong> signs and broadcasts the USDC transfer on Arc Testnet — Safe4 never holds or sees your key. The recipient and cap come from server configuration, never from this page.</p>
+        </div>
+        <button class="wallet-button" id="walletButton" type="button">Connect wallet →</button>
+      </div>
+      <div class="wallet-account" id="walletAccount"></div>
+      <ol class="wallet-feed" id="walletFeed"></ol>
+      <div class="wallet-hash" id="walletHash"></div>
     </section>
 
     <section class="integrate" aria-label="Integrate Safe4">
@@ -547,6 +592,158 @@ python examples/safe4_quickstart.py \
       }
 
       if (liveButton) liveButton.addEventListener("click", runLiveSettlement);
+
+      // Additive wallet-connect lane. Distinct from the two lanes above: no
+      // server-held key exists for this lane at all. The visitor's own
+      // wallet signs and broadcasts; Safe4 only ever returns a decision.
+      const ARC_CHAIN_ID_HEX = "0x4cef52";
+      const walletButton = document.getElementById("walletButton");
+      const walletAccount = document.getElementById("walletAccount");
+      const walletFeed = document.getElementById("walletFeed");
+      const walletHash = document.getElementById("walletHash");
+      let walletAddress = null;
+
+      const WALLET_STEPS = [
+        "Connect wallet",
+        "Safe4 authorization decision",
+        "Sign transfer in your wallet",
+        "Broadcast to Arc Testnet",
+        "Verify exact Transfer event",
+      ];
+
+      function renderWalletFeed(states) {
+        walletFeed.innerHTML = "";
+        WALLET_STEPS.forEach((text, index) => {
+          const state = states[index] || "idle";
+          const mark = state === "done" ? "✓" : state === "failed" ? "✕" : state === "active" ? "·" : " ";
+          const item = document.createElement("li");
+          item.dataset.state = state;
+          const tick = document.createElement("span");
+          tick.className = "tick";
+          tick.textContent = mark;
+          const label = document.createElement("span");
+          label.textContent = text;
+          item.append(tick, label);
+          walletFeed.append(item);
+        });
+      }
+
+      function toUnits(amountText, decimals) {
+        const [whole, frac = ""] = String(amountText).split(".");
+        const paddedFrac = (frac + "0".repeat(decimals)).slice(0, decimals);
+        return BigInt(whole || "0") * (10n ** BigInt(decimals)) + BigInt(paddedFrac || "0");
+      }
+
+      function encodeTransfer(recipient, amountUnits) {
+        const paddedRecipient = recipient.replace(/^0x/i, "").toLowerCase().padStart(64, "0");
+        const paddedAmount = amountUnits.toString(16).padStart(64, "0");
+        return "0xa9059cbb" + paddedRecipient + paddedAmount;
+      }
+
+      async function ensureArcTestnet() {
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: ARC_CHAIN_ID_HEX }],
+          });
+        } catch (switchError) {
+          if (switchError && switchError.code === 4902) {
+            const config = await fetch("/demo/wallet/config").then((r) => r.json());
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: ARC_CHAIN_ID_HEX,
+                chainName: "Arc Testnet",
+                nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+                rpcUrls: [config.rpc_url],
+                blockExplorerUrls: [config.explorer],
+              }],
+            });
+          } else {
+            throw switchError;
+          }
+        }
+      }
+
+      async function runWalletLane() {
+        if (!window.ethereum) {
+          walletHash.textContent = "No wallet extension detected (window.ethereum is absent).";
+          return;
+        }
+        const states = ["active", "idle", "idle", "idle", "idle"];
+        walletButton.disabled = true;
+        walletHash.textContent = "";
+        renderWalletFeed(states);
+        try {
+          if (!walletAddress) {
+            const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+            walletAddress = accounts[0];
+            await ensureArcTestnet();
+            walletAccount.textContent = `Connected: ${walletAddress}`;
+            walletButton.textContent = "Authorize & sign →";
+          }
+          states[0] = "done"; states[1] = "active";
+          renderWalletFeed(states);
+
+          const scenario = SCENARIOS[selectedName];
+          const entry = materializeItem(scenario.items[0], scenario, 0);
+          const evaluation = await parseResponse(await fetch("/demo/wallet/evaluate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              task: entry.task,
+              purpose: entry.purpose,
+              amount: "0.001",
+              service_category: entry.category,
+            }),
+          }));
+          if (!evaluation.response.ok) throw new Error(apiError(evaluation, "Safe4 evaluation failed."));
+
+          if (!evaluation.body.allowed) {
+            states[1] = "failed";
+            renderWalletFeed(states);
+            walletHash.textContent = `DENIED ${evaluation.body.decision.reason_code} · nothing was signed or broadcast`;
+            return;
+          }
+          states[1] = "done"; states[2] = "active";
+          renderWalletFeed(states);
+
+          const config = await fetch("/demo/wallet/config").then((r) => r.json());
+          const units = toUnits(evaluation.body.amount_usdc, config.usdc_decimals);
+          const data = encodeTransfer(evaluation.body.recipient, units);
+          const txHash = await window.ethereum.request({
+            method: "eth_sendTransaction",
+            params: [{ from: walletAddress, to: config.usdc_address, data, value: "0x0" }],
+          });
+          states[2] = "done"; states[3] = "active";
+          renderWalletFeed(states);
+          walletHash.innerHTML = `Broadcast <a href="${config.explorer}/tx/${txHash}" target="_blank" rel="noreferrer noopener">${txHash}</a>`;
+
+          for (let attempt = 0; attempt < 60; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const check = await parseResponse(await fetch(`/demo/wallet/status?tx=${encodeURIComponent(txHash)}`));
+            if (!check.response.ok || !check.body.confirmed) continue;
+            states[3] = check.body.succeeded ? "done" : "failed";
+            states[4] = check.body.rpc_verified_transfer_to_configured_recipient ? "done" : "failed";
+            renderWalletFeed(states);
+            walletHash.innerHTML = `Confirmed in block ${check.body.block} · <a href="${config.explorer}/tx/${txHash}" target="_blank" rel="noreferrer noopener">${txHash}</a>`;
+            return;
+          }
+          states[3] = "failed";
+          renderWalletFeed(states);
+          walletHash.textContent = "Receipt not observed in time. The transaction may still confirm; check the explorer.";
+        } catch (error) {
+          const index = states.indexOf("active");
+          if (index >= 0) states[index] = "failed";
+          renderWalletFeed(states);
+          walletHash.textContent = error instanceof Error ? error.message : "Wallet lane failed.";
+        } finally {
+          walletButton.disabled = false;
+        }
+      }
+
+      if (walletButton) walletButton.addEventListener("click", runWalletLane);
+
       const connectButton = document.getElementById("connectButton");
       const runButton = document.getElementById("runButton");
       const connectionNote = document.getElementById("connectionNote");

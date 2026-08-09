@@ -37,6 +37,7 @@ from .api.integrations import router as integrations_router
 from .api.integrations import setup_integrations_api
 from .api.demo import router as demo_router, setup_demo_api
 from .api.demo_live import router as demo_live_router
+from .api.demo_wallet import router as demo_wallet_router
 from .auth import (
     AgentIdentity,
     audit_infrastructure_identity_fields,
@@ -1996,6 +1997,7 @@ app.include_router(ap2_router)
 app.include_router(budgets_router)
 app.include_router(demo_router)
 app.include_router(demo_live_router)
+app.include_router(demo_wallet_router)
 app.include_router(hitl_router)
 app.include_router(integrations_router)
 app.include_router(mcp_router)

@@ -373,17 +373,16 @@ docs (`docs/hackathon/NEXT_SESSION_PROMPT.md`,
 `scripts/check_docs.py` now exempts by name for the same reason they are
 already excluded from the public export.
 
-## 9 August 2026 demo-day/live-lane presenter live settlement
+## 9 August 2026 presenter live settlement lane
 
-The `demo-day/live-lane` branch adds an admin-gated live settlement lane
-(`POST /demo/live/settle`, `GET /demo/live/status` in
-`app/api/demo_live.py`) deployed to the separate `safe4-demoday` Railway
-service. It is deliberately not part of the judged `main` build. The lane
-runs Safe4's real evaluator and only broadcasts on ALLOW; it is inert
-(returns `503 LIVE_SETTLEMENT_NOT_CONFIGURED`) on any deployment missing
-either `ARC_PRIVATE_KEY` or `PAYMENT_FIREWALL_LIVE_ADMIN_SECRET`, confirmed
-against the judged `safe4-arc-demo` deployment, where
-`GET /demo/live/status` 404s because the route is not mounted at all.
+`app/api/demo_live.py` adds an admin-gated live settlement lane
+(`POST /demo/live/settle`, `GET /demo/live/status`), merged into the judged
+`main` build and deployed to `safe4-arc-demo` the same day (see the task-2
+merge entry in `SHIPLINE.md`). The lane runs Safe4's real evaluator and only
+broadcasts on ALLOW; it is inert (returns `503
+LIVE_SETTLEMENT_NOT_CONFIGURED`) on any deployment missing either
+`ARC_PRIVATE_KEY` or `PAYMENT_FIREWALL_LIVE_ADMIN_SECRET` — confirmed against
+the judged `safe4-arc-demo` deployment itself, which has neither configured.
 
 Independently RPC-verified against `https://rpc.testnet.arc.network` on 9
 August 2026:
@@ -409,3 +408,49 @@ context was request-supplied. It does not establish principal-bound intent,
 exactly-once external settlement, or chain-wide prevention, and it is
 separate from the browser lab's guarded `signed_receipt_fallback` evidence
 above.
+
+## 9 August 2026 additive browser wallet-signing lane
+
+`app/api/demo_wallet.py` adds a third, distinctly labelled lane ("Connect
+your wallet · experimental") where a visitor's own EIP-1193 wallet signs and
+broadcasts the transfer after Safe4 returns ALLOW. Unlike the presenter lane
+above, there is no private key for this lane anywhere on the server; the
+recipient and per-transaction cap still come only from server configuration
+(`GET /demo/wallet/config`), never from the request.
+
+Tested end-to-end in a real Chrome session with a connected MetaMask wallet
+(`0xCb034Cc0ca5C3415B6a543c9f260CAA5199b1D0e`) against the local dev server:
+
+```text
+scenario=Task-matched API purchase (ALLOW expected)
+decision=ALLOWED reason_code=TASK_PURCHASE_MATCH
+wallet_signed=true
+transaction_hash=0xe150f78b0f30cddfc04598f6173d5afa33d64bae9a0752b822b65e5729ce2ace
+chain_id=5042002
+block_number=56176225
+status=success (0x1)
+from=0xCb034Cc0ca5C3415B6a543c9f260CAA5199b1D0e
+to=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+token=0x3600000000000000000000000000000000000000
+amount=0.001000 USDC
+```
+
+Independently RPC-verified against `https://rpc.testnet.arc.network`: status
+`0x1`, exact ERC-20 Transfer log matching the amount and configured
+recipient. Explorer:
+<https://testnet.arcscan.app/tx/0xe150f78b0f30cddfc04598f6173d5afa33d64bae9a0752b822b65e5729ce2ace>
+
+The paired DENY scenario ("Wrong purchase purpose") returned
+`PURCHASE_PURPOSE_MISMATCH` and produced no wallet signing prompt and no
+transaction — verified by inspecting the connected page's DOM state
+directly, not just its rendered text. `tests/test_demo_wallet.py` (11 tests)
+covers the same recipient-is-configuration-only, amount-cap, and DENY-never-
+signs guarantees offline.
+
+This directly narrows the browser lab's older blanket claim that "the
+browser never receives a wallet key" to the seven predeclared/open
+scenarios only; this additive lane is the one exception, and it uses a
+visitor-held key, never Safe4's. Testnet only; the visitor must hold their
+own testnet USDC, so this lane cannot replace the presenter lane for a room
+of unfunded judges. Not yet independently re-verified against the deployed
+`demo.safe4.ai` URL as of this writing — see `SHIPLINE.md` for that status.

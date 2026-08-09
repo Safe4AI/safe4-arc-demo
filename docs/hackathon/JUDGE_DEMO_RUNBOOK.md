@@ -1,13 +1,16 @@
 # Safe4 judge demo runbook
 
 This walkthrough shows Safe4's local payment-authorization controls in about
-90 seconds. It does not broadcast a blockchain transaction.
+90 seconds. The predeclared/open scenarios below do not broadcast a
+blockchain transaction. The page separately has an additive "Connect your
+wallet" lane (see below) that does, using a visitor-held key only.
 
 ## Hosted demo
 
 No install needed: <https://demo.safe4.ai/demo/x402?access_token=safe4-judge-ad9eb36b6f57>
-runs the same authorization-only scenarios described below against the
-judged deployment. It never receives a wallet key and never broadcasts.
+runs the same scenarios described below against the judged deployment. The
+seven predeclared/open scenarios never receive a wallet key and never
+broadcast.
 
 ## Start the isolated demo
 
@@ -54,7 +57,9 @@ If time permits, start with **Task-matched purchase** to show the complete
   scoped to the seeded demo agent, rate-limited, and audited.
 - The observed local outcomes cover task matching, fan-out, intent, autonomy
   scope, proof replay, and request idempotency.
-- The browser never receives a wallet key and has no settlement executor.
+- For these seven scenarios, the browser never receives a wallet key and has
+  no settlement executor. The separate "Connect your wallet" lane is the one
+  exception — see below.
 
 ## Evidence boundary
 
@@ -90,19 +95,33 @@ The verifier did not decode complete UserOperation calldata. The execution
 revision also retained environment-hardening limitations documented in the
 bundle; later hardening is not evidence about that earlier execution.
 
-### Optional: presenter live settlement lane (not part of this build)
+### Optional: presenter live settlement lane
 
-`demo-day/live-lane` is a separate, not-yet-merged branch deployed at
-<https://safe4-demoday-production.up.railway.app>. It adds a presenter-operated,
-admin-gated lane (`POST /demo/live/settle`) that runs Safe4's real evaluator
-and only on ALLOW broadcasts one real Arc Testnet USDC transfer from a
-server-held hot wallet. It is inert without a live admin secret the browser
-never holds. On 9 August 2026 it produced transaction
+`app/api/demo_live.py` adds a presenter-operated, admin-gated lane
+(`POST /demo/live/settle`) that runs Safe4's real evaluator and only on
+ALLOW broadcasts one real Arc Testnet USDC transfer from a server-held hot
+wallet. It is inert (`503`) on any deployment missing either
+`ARC_PRIVATE_KEY` or `PAYMENT_FIREWALL_LIVE_ADMIN_SECRET` — the browser never
+holds either. On 9 August 2026 it produced transaction
 [`0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540`](https://testnet.arcscan.app/tx/0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540),
-block `56147830`, `0.001 USDC`, RPC-verified. This lane is not present on the
-judged `main` deployment (`GET /demo/live/status` there returns `404`); see
+block `56147830`, `0.001 USDC`, RPC-verified. See
 `docs/hackathon/CLAIM_LEDGER.md` and `docs/hackathon/VERIFICATION_EVIDENCE.md`
-for the current boundary between the two.
+for the current evidence boundary.
+
+### Additive: connect your own wallet
+
+A third, distinctly labelled section on the page ("Connect your wallet ·
+experimental") lets a visitor connect their own EIP-1193 wallet (e.g.
+MetaMask) on Arc Testnet. On ALLOW, the visitor's own wallet — not Safe4 —
+signs and broadcasts the transfer; there is no private key for this lane
+anywhere on the server. On DENY, nothing is signed. Tested end-to-end on 9
+August 2026 with a connected MetaMask wallet: ALLOW produced transaction
+[`0xe150f78b0f30cddfc04598f6173d5afa33d64bae9a0752b822b65e5729ce2ace`](https://testnet.arcscan.app/tx/0xe150f78b0f30cddfc04598f6173d5afa33d64bae9a0752b822b65e5729ce2ace),
+block `56176225`, RPC-verified; the paired DENY produced no signing prompt.
+This is the one part of the page where the visitor's browser does hold a
+wallet key — their own, never Safe4's. It requires the visitor to hold
+testnet USDC, so it cannot replace the presenter lane above for a room of
+unfunded judges.
 
 ## Judge-safe narration
 

@@ -212,9 +212,12 @@ task-matched purchase, three independent service authorizations, intent and
 autonomy-scope denials, receipt replay, idempotent retry, and an open
 challenge lane where the operator types any task and purchase and the lane
 reports the real decision with no expected outcome asserted. Its guarded
-receipt is explicitly scaffolded; the browser does not receive a wallet key or
-admin credential and does not broadcast a fresh transaction. The three-service
+receipt is explicitly scaffolded; none of these seven receive a wallet key or
+admin credential or broadcast a fresh transaction. The three-service
 case is sequential and non-atomic, not a native multisend or Gateway batch.
+The page also has one additive, distinctly labelled "Connect your wallet"
+lane where a visitor's own EIP-1193 wallet signs and broadcasts a real
+transfer after ALLOW, with no Safe4-held key in that lane either.
 
 Use the [judge demo runbook](docs/hackathon/JUDGE_DEMO_RUNBOOK.md) for a
 90-second walkthrough and the exact evidence boundaries.
