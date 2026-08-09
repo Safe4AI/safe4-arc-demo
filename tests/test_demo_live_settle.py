@@ -146,5 +146,52 @@ class LiveSettleGuardTests(unittest.TestCase):
         self.assertEqual(demo_live.MAX_PER_DAY, Decimal("0.10"))
 
 
+class LiveStatusTests(unittest.TestCase):
+    def setUp(self) -> None:
+        with demo_live._pending_lock:
+            demo_live._pending.clear()
+
+    def test_status_requires_the_admin_header(self) -> None:
+        env = {"PAYMENT_FIREWALL_LIVE_ADMIN_SECRET": ADMIN}
+        with patch.dict(demo_live.os.environ, env, clear=False):
+            with TestClient(main.app) as client:
+                response = client.get("/demo/live/status", params={"tx": "0x" + "ab" * 32})
+        self.assertEqual(response.status_code, 403)
+
+    def test_status_refuses_a_transaction_this_lane_did_not_send(self) -> None:
+        """Prevents the endpoint being used to vouch for an unrelated transaction."""
+        env = {"PAYMENT_FIREWALL_LIVE_ADMIN_SECRET": ADMIN}
+        with patch.dict(demo_live.os.environ, env, clear=False):
+            with patch.object(demo_live, "_rpc") as rpc:
+                with TestClient(main.app) as client:
+                    response = client.get(
+                        "/demo/live/status",
+                        params={"tx": "0x" + "cd" * 32},
+                        headers={"X-Live-Admin": ADMIN},
+                    )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.json()["detail"]["code"], "LIVE_TRANSACTION_NOT_FROM_THIS_LANE"
+        )
+        rpc.assert_not_called()
+
+    def test_status_reports_pending_before_a_receipt_exists(self) -> None:
+        tx = "0x" + "ef" * 32
+        demo_live._remember_pending(tx, "0x" + "1" * 40, "0x" + "2" * 40, 1000)
+        env = {"PAYMENT_FIREWALL_LIVE_ADMIN_SECRET": ADMIN}
+        with patch.dict(demo_live.os.environ, env, clear=False):
+            with patch.object(demo_live, "_rpc", return_value=None):
+                with TestClient(main.app) as client:
+                    response = client.get(
+                        "/demo/live/status",
+                        params={"tx": tx},
+                        headers={"X-Live-Admin": ADMIN},
+                    )
+        body = response.json()
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(body["pending"])
+        self.assertFalse(body["confirmed"])
+
+
 if __name__ == "__main__":
     unittest.main()

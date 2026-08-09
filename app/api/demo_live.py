@@ -265,18 +265,16 @@ def live_settle(
             tx_hash = _rpc(
                 client, "eth_sendRawTransaction", ["0x" + signed.raw_transaction.hex()]
             )
-            receipt = _wait_for_receipt(client, tx_hash)
 
-        if int(receipt.get("status", "0x0"), 16) != 1:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail={"code": "LIVE_TRANSACTION_REVERTED", "transaction": tx_hash},
-            )
-        verified = _verify_transfer_log(receipt, sender, recipient, units)
-
+        # Return as soon as the transaction is accepted by the node. Confirmation
+        # is observed separately through /demo/live/status so the caller can show
+        # real chain progress instead of blocking on one long request.
+        _remember_pending(tx_hash, sender, recipient, units)
         return {
             "settled": True,
             "executor_invoked": True,
+            "broadcast": True,
+            "confirmed": False,
             "decision": decision.public_details(),
             "network": "arc-testnet",
             "chain_id": ARC_CHAIN_ID,
@@ -284,8 +282,6 @@ def live_settle(
             "to": recipient,
             "amount_usdc": str(payload.amount),
             "transaction": tx_hash,
-            "block": int(receipt.get("blockNumber", "0x0"), 16),
-            "rpc_verified_transfer_event": verified,
             "explorer": f"{EXPLORER}/tx/{tx_hash}",
         }
     except HTTPException:
@@ -303,3 +299,73 @@ def _constant_time_equals(left: str, right: str) -> bool:
     import hmac
 
     return hmac.compare_digest(left.encode("utf-8"), right.encode("utf-8"))
+
+
+_pending_lock = threading.Lock()
+_pending: dict[str, tuple[str, str, int]] = {}
+
+
+def _remember_pending(tx_hash: str, sender: str, recipient: str, units: int) -> None:
+    """Record what a broadcast transaction is expected to contain.
+
+    The status endpoint verifies against this rather than trusting its caller,
+    so a status query cannot be used to assert an unrelated transaction.
+    """
+    with _pending_lock:
+        if len(_pending) > 256:
+            _pending.clear()
+        _pending[tx_hash.lower()] = (sender, recipient, units)
+
+
+@router.get("/demo/live/status")
+def live_status(
+    tx: str,
+    live_admin: str | None = Header(default=None, alias="X-Live-Admin"),
+) -> dict[str, Any]:
+    admin_secret = os.getenv("PAYMENT_FIREWALL_LIVE_ADMIN_SECRET")
+    if not admin_secret:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={"code": "LIVE_SETTLEMENT_NOT_CONFIGURED"},
+        )
+    if not live_admin or not _constant_time_equals(live_admin, admin_secret):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "LIVE_ADMIN_REQUIRED"},
+        )
+
+    with _pending_lock:
+        expected = _pending.get(tx.lower())
+    if expected is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": "LIVE_TRANSACTION_NOT_FROM_THIS_LANE"},
+        )
+    sender, recipient, units = expected
+
+    with httpx.Client(timeout=20.0) as client:
+        receipt = _rpc(client, "eth_getTransactionReceipt", [tx])
+
+    if not receipt:
+        return {
+            "transaction": tx,
+            "confirmed": False,
+            "pending": True,
+            "explorer": f"{EXPLORER}/tx/{tx}",
+        }
+
+    succeeded = int(receipt.get("status", "0x0"), 16) == 1
+    return {
+        "transaction": tx,
+        "confirmed": True,
+        "pending": False,
+        "succeeded": succeeded,
+        "block": int(receipt.get("blockNumber", "0x0"), 16),
+        "gas_used": int(receipt.get("gasUsed", "0x0"), 16),
+        "rpc_verified_transfer_event": (
+            _verify_transfer_log(receipt, sender, recipient, units)
+            if succeeded
+            else False
+        ),
+        "explorer": f"{EXPLORER}/tx/{tx}",
+    }

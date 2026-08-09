@@ -267,6 +267,32 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
     .evidence-lane p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
     .evidence-link { color: var(--signal); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-underline-offset: 3px; text-transform: uppercase; }
 
+    .live-lane { display: none; margin-top: 12px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--signal); }
+    .live-lane[data-armed="true"] { display: block; }
+    .live-lane .label { color: var(--signal); }
+    .live-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+    .live-button {
+      padding: 9px 16px;
+      background: var(--signal);
+      color: #12130d;
+      border: 0;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .live-button:disabled { opacity: .55; cursor: wait; }
+    .live-feed { margin: 10px 0 0; padding: 0; list-style: none; font-size: 11px; }
+    .live-feed li { display: flex; gap: 8px; padding: 3px 0; color: var(--muted); }
+    .live-feed li[data-state="active"] { color: var(--ink); }
+    .live-feed li[data-state="done"] { color: var(--ok, #9ad86a); }
+    .live-feed li[data-state="failed"] { color: var(--bad, #ff6b6b); }
+    .live-feed .tick { width: 14px; flex: 0 0 14px; }
+    .live-hash { margin-top: 8px; font-size: 11px; word-break: break-all; }
+    .live-hash a { color: var(--signal); }
+
     .integrate { margin-top: 12px; padding: 12px 14px; background: var(--panel-2); border: 1px solid var(--line-soft); }
     .integrate summary { color: var(--signal); font-size: 10px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; cursor: pointer; }
     .integrate pre {
@@ -386,6 +412,18 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
       <a class="evidence-link" href="https://testnet.arcscan.app/tx/0x80cb6d59bcbdd9f25ab7bdd41816febd041cc6bb353c7216dddf6b3c7cfc4a27" target="_blank" rel="noreferrer noopener">Latest 0.003 USDC proof ↗</a>
     </section>
 
+    <section class="live-lane" id="liveLane" data-armed="false" aria-label="Live Arc Testnet settlement">
+      <div class="live-head">
+        <div>
+          <span class="label">Live Arc Testnet settlement · presenter only</span>
+          <p class="boundary">Runs the same Safe4 authorization, then broadcasts one real USDC transfer on Arc Testnet only if the decision is ALLOW. Capped at 0.01 USDC per transaction. The recipient is fixed in configuration and cannot be set from this page.</p>
+        </div>
+        <button class="live-button" id="liveButton" type="button">Authorize &amp; settle live →</button>
+      </div>
+      <ol class="live-feed" id="liveFeed"></ol>
+      <div class="live-hash" id="liveHash"></div>
+    </section>
+
     <section class="integrate" aria-label="Integrate Safe4">
       <details>
         <summary>Call Safe4 from your own machine</summary>
@@ -412,6 +450,103 @@ python examples/safe4_quickstart.py \
       // Show the integration snippet against whichever host actually served this page.
       const integrateBase = document.getElementById("integrateBase");
       if (integrateBase) integrateBase.textContent = window.location.origin;
+
+      // Presenter-only live settlement. The secret never ships with the page: it
+      // is supplied as ?live_admin=... at demo time and only ever sent to this
+      // origin as a request header.
+      const liveAdmin = new URLSearchParams(window.location.search).get("live_admin") || "";
+      const liveLane = document.getElementById("liveLane");
+      const liveButton = document.getElementById("liveButton");
+      const liveFeed = document.getElementById("liveFeed");
+      const liveHash = document.getElementById("liveHash");
+      if (liveAdmin && liveLane) liveLane.dataset.armed = "true";
+
+      const LIVE_STEPS = [
+        "Safe4 authorization decision",
+        "Build and sign transfer",
+        "Broadcast to Arc Testnet",
+        "Wait for block confirmation",
+        "Verify exact Transfer event",
+      ];
+
+      function renderFeed(states) {
+        liveFeed.innerHTML = "";
+        LIVE_STEPS.forEach((text, index) => {
+          const state = states[index] || "idle";
+          const mark = state === "done" ? "✓" : state === "failed" ? "✕" : state === "active" ? "·" : " ";
+          const item = document.createElement("li");
+          item.dataset.state = state;
+          const tick = document.createElement("span");
+          tick.className = "tick";
+          tick.textContent = mark;
+          const label = document.createElement("span");
+          label.textContent = text;
+          item.append(tick, label);
+          liveFeed.append(item);
+        });
+      }
+
+      async function runLiveSettlement() {
+        if (running) return;
+        const scenario = SCENARIOS[selectedName];
+        const entry = materializeItem(scenario.items[0], scenario, 0);
+        const states = ["active", "idle", "idle", "idle", "idle"];
+        liveButton.disabled = true;
+        liveHash.textContent = "";
+        renderFeed(states);
+        try {
+          const settle = await parseResponse(await fetch("/demo/live/settle", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Live-Admin": liveAdmin },
+            body: JSON.stringify({
+              task: entry.task,
+              purpose: entry.purpose,
+              amount: "0.001",
+              service_category: entry.category,
+            }),
+          }));
+          if (!settle.response.ok) throw new Error(apiError(settle, "Live settlement was refused."));
+
+          if (!settle.body.settled) {
+            // Denied. Nothing was built, signed, or broadcast.
+            states[0] = "failed";
+            renderFeed(states);
+            liveHash.textContent = `DENIED ${settle.body.decision.reason_code} · executor not invoked · no transaction exists`;
+            return;
+          }
+
+          states[0] = "done"; states[1] = "done"; states[2] = "done"; states[3] = "active";
+          renderFeed(states);
+          const tx = settle.body.transaction;
+          liveHash.innerHTML = `Broadcast <a href="${settle.body.explorer}" target="_blank" rel="noreferrer noopener">${tx}</a>`;
+
+          // Poll real chain state until the receipt appears.
+          for (let attempt = 0; attempt < 60; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            const status = await parseResponse(await fetch(`/demo/live/status?tx=${encodeURIComponent(tx)}`, {
+              headers: { "X-Live-Admin": liveAdmin },
+            }));
+            if (!status.response.ok || !status.body.confirmed) continue;
+            states[3] = status.body.succeeded ? "done" : "failed";
+            states[4] = status.body.rpc_verified_transfer_event ? "done" : "failed";
+            renderFeed(states);
+            liveHash.innerHTML = `Confirmed in block ${status.body.block} · <a href="${status.body.explorer}" target="_blank" rel="noreferrer noopener">${tx}</a>`;
+            return;
+          }
+          states[3] = "failed";
+          renderFeed(states);
+          liveHash.textContent = "Receipt not observed in time. The transaction may still confirm; check the explorer.";
+        } catch (error) {
+          const index = states.indexOf("active");
+          if (index >= 0) states[index] = "failed";
+          renderFeed(states);
+          liveHash.textContent = error instanceof Error ? error.message : "Live settlement failed.";
+        } finally {
+          liveButton.disabled = false;
+        }
+      }
+
+      if (liveButton) liveButton.addEventListener("click", runLiveSettlement);
       const connectButton = document.getElementById("connectButton");
       const runButton = document.getElementById("runButton");
       const connectionNote = document.getElementById("connectionNote");
