@@ -7,6 +7,13 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IGNORED_PARTS = {".git", ".tmp", ".python313", ".venv", "node_modules", "__pycache__"}
+# Local-only working docs, deliberately absent from the docs/hackathon allowlist
+# in scripts/prepare_public_demo.ps1, so their Windows paths never reach the
+# public export and don't need to pass the forbidden-path check here.
+LOCAL_ONLY_FILES = {
+    Path("docs/hackathon/NEXT_SESSION_PROMPT.md"),
+    Path("docs/hackathon/VIDEO_RECORDING_GUIDE.md"),
+}
 LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 FORBIDDEN_RE = [
     re.compile(r"(?i)\bc:\\"),
@@ -60,6 +67,9 @@ def main() -> int:
     for md_file in md_files:
         text = md_file.read_text(encoding="utf-8")
         rel_path = md_file.relative_to(ROOT)
+
+        if rel_path in LOCAL_ONLY_FILES:
+            continue
 
         for pattern in FORBIDDEN_RE:
             if pattern.search(text):

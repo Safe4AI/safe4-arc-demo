@@ -3,6 +3,12 @@
 This walkthrough shows Safe4's local payment-authorization controls in about
 90 seconds. It does not broadcast a blockchain transaction.
 
+## Hosted demo
+
+No install needed: <https://demo.safe4.ai/demo/x402?access_token=safe4-judge-ad9eb36b6f57>
+runs the same authorization-only scenarios described below against the
+judged deployment. It never receives a wallet key and never broadcasts.
+
 ## Start the isolated demo
 
 From the repository root, run:
@@ -33,6 +39,10 @@ the guarded browser receipt fixture.
    response bodies. Explain that the separately cited regression test verifies
    one local budget/log write; the browser does not query the database count.
    This is a local replay guarantee, not exactly-once external settlement.
+6. **Open challenge** — let the judge type their own task and purchase. The
+   lane reports Safe4's real decision live; no outcome is predeclared or
+   asserted, so this is the closest thing to letting a judge probe the
+   evaluator directly.
 
 If time permits, start with **Task-matched purchase** to show the complete
 `402 -> guarded proof -> 200` baseline before the controls.
@@ -79,6 +89,20 @@ integration, three paid external x402 endpoints, or exactly-once settlement.
 The verifier did not decode complete UserOperation calldata. The execution
 revision also retained environment-hardening limitations documented in the
 bundle; later hardening is not evidence about that earlier execution.
+
+### Optional: presenter live settlement lane (not part of this build)
+
+`demo-day/live-lane` is a separate, not-yet-merged branch deployed at
+<https://safe4-demoday-production.up.railway.app>. It adds a presenter-operated,
+admin-gated lane (`POST /demo/live/settle`) that runs Safe4's real evaluator
+and only on ALLOW broadcasts one real Arc Testnet USDC transfer from a
+server-held hot wallet. It is inert without a live admin secret the browser
+never holds. On 9 August 2026 it produced transaction
+[`0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540`](https://testnet.arcscan.app/tx/0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540),
+block `56147830`, `0.001 USDC`, RPC-verified. This lane is not present on the
+judged `main` deployment (`GET /demo/live/status` there returns `404`); see
+`docs/hackathon/CLAIM_LEDGER.md` and `docs/hackathon/VERIFICATION_EVIDENCE.md`
+for the current boundary between the two.
 
 ## Judge-safe narration
 

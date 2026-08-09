@@ -357,3 +357,55 @@ failed known-gap canaries and block any unqualified claim that Safe4 is robust
 against intent laundering, spoofed purpose text, or counterparty substitution.
 The S01-S08 results are deterministic local fixture evidence, not live chain
 events. No Arc RPC replay was run for this matrix.
+
+## 9 August 2026 regression baseline
+
+```text
+python -m pytest -q
+524 passed, 7 warnings, 35 subtests passed in 164.35s (0:02:44)
+```
+
+`python scripts/check_docs.py` reported `0 issues` across `122` markdown
+files. The only forbidden-pattern matches were two known local-only working
+docs (`docs/hackathon/NEXT_SESSION_PROMPT.md`,
+`docs/hackathon/VIDEO_RECORDING_GUIDE.md`, both absent from the
+`docs/hackathon` allowlist in `scripts/prepare_public_demo.ps1`), which
+`scripts/check_docs.py` now exempts by name for the same reason they are
+already excluded from the public export.
+
+## 9 August 2026 demo-day/live-lane presenter live settlement
+
+The `demo-day/live-lane` branch adds an admin-gated live settlement lane
+(`POST /demo/live/settle`, `GET /demo/live/status` in
+`app/api/demo_live.py`) deployed to the separate `safe4-demoday` Railway
+service. It is deliberately not part of the judged `main` build. The lane
+runs Safe4's real evaluator and only broadcasts on ALLOW; it is inert
+(returns `503 LIVE_SETTLEMENT_NOT_CONFIGURED`) on any deployment missing
+either `ARC_PRIVATE_KEY` or `PAYMENT_FIREWALL_LIVE_ADMIN_SECRET`, confirmed
+against the judged `safe4-arc-demo` deployment, where
+`GET /demo/live/status` 404s because the route is not mounted at all.
+
+Independently RPC-verified against `https://rpc.testnet.arc.network` on 9
+August 2026:
+
+```text
+transaction_hash=0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540
+chain_id=5042002
+block_number=56147830
+status=success (0x1)
+from=0xCb034Cc0ca5C3415B6a543c9f260CAA5199b1D0e
+to=0x530271DA8CC4e44375f22ad9632bC61A55382f88
+token=0x3600000000000000000000000000000000000000
+amount=0.001000 USDC
+```
+
+Explorer:
+<https://testnet.arcscan.app/tx/0xacd1f38ba411e4596c0039bfe438c4b5f41ae0c31227ae6fc770ffcd68be1540>
+
+This is testnet-only, presenter-operated evidence: the transaction was
+broadcast by a server-held hot wallet (`0xCb034Cc0ca5C3415B6a543c9f260CAA5199b1D0e`)
+after an admin-secret-gated request, not by a connected visitor wallet. Task
+context was request-supplied. It does not establish principal-bound intent,
+exactly-once external settlement, or chain-wide prevention, and it is
+separate from the browser lab's guarded `signed_receipt_fallback` evidence
+above.

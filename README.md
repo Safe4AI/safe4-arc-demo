@@ -7,9 +7,19 @@ with submitted task context, and safe to settle before allowing USDC to move.
 This is the public build repository for Safe4's Encode x Arc Programmable Money
 Hackathon submission in the Agentic Economy track.
 
+## Hosted demo
+
+No install needed:
+<https://demo.safe4.ai/demo/x402?access_token=safe4-judge-ad9eb36b6f57> runs
+the seven-scenario authorization lab against the judged deployment, including
+an open challenge lane where you type your own task and purchase and get the
+real decision. See
+[`docs/hackathon/JUDGE_DEMO_RUNBOOK.md`](docs/hackathon/JUDGE_DEMO_RUNBOOK.md)
+for a 90-second walkthrough and the exact evidence boundaries.
+
 ## Current verified status
 
-As of 5 August 2026:
+As of 9 August 2026:
 
 - the FastAPI payment-firewall service and its policy, approval, receipt, audit,
   AP2, x402, MCP-governance, and anomaly-control paths are implemented
@@ -32,10 +42,13 @@ As of 5 August 2026:
 - an independently reviewed fixed batch authorized three local requests, then
   settled and RPC-verified three sequential Arc Testnet transfers totaling
   `0.006 USDC` to one reviewed recipient
+- a separate presenter-operated, admin-gated live settlement lane (not part
+  of this judged build; see `docs/hackathon/CLAIM_LEDGER.md`) settled and
+  RPC-verified a further `0.001 USDC` Arc Testnet transfer on 9 August 2026
 
-The midpoint milestone was 27 July 2026. Integration runs 27–31 July,
-proof runs 1–8 August, and final submission is due 9 August 2026; the exact
-dashboard cutoff and timezone remain to be confirmed.
+The midpoint milestone was 27 July 2026. Integration ran 27–31 July, proof
+ran 1–8 August, and final submission is due Monday 10 August 2026, 13:59
+(GMT+02:00).
 
 ## Edge-case transaction evidence
 
@@ -179,10 +192,12 @@ Open:
 - operator console:
   <http://localhost:8090/demo/console?access_token=safe4-local-demo>
 
-The x402 decision lab connects a least-privilege demo agent and exercises six
-predeclared scenarios through the real local `/pay` challenge/retry path:
+The x402 decision lab connects a least-privilege demo agent and exercises
+seven scenarios through the real local `/pay` challenge/retry path:
 task-matched purchase, three independent service authorizations, intent and
-autonomy-scope denials, receipt replay, and idempotent retry. Its guarded
+autonomy-scope denials, receipt replay, idempotent retry, and an open
+challenge lane where the operator types any task and purchase and the lane
+reports the real decision with no expected outcome asserted. Its guarded
 receipt is explicitly scaffolded; the browser does not receive a wallet key or
 admin credential and does not broadcast a fresh transaction. The three-service
 case is sequential and non-atomic, not a native multisend or Gateway batch.
