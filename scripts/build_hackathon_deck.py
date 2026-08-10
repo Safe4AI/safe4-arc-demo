@@ -314,13 +314,13 @@ def build_deck() -> Presentation:
 
     # 05 — Architecture
     slide = deck.slides.add_slide(blank)
-    add_base(slide, 5, "Architecture", "Observed Arc Testnet path: Safe4 ALLOW precedes Circle Agent Wallet execution.")
-    add_title(slide, "Observed path", "Safe4 authorization + Circle Agent Wallet", "Fresh 0.01 testnet USDC settlement is RPC-verified through the ERC-4337 receipt.")
+    add_base(slide, 5, "Architecture", "Observed Arc Testnet path: Safe4 ALLOW precedes execution — presenter hot wallet, visitor wallet, or an external caller's own settlement.")
+    add_title(slide, "Observed path", "Safe4 authorization, three ways to execute", "Real 0.001 USDC testnet settlements are RPC-verified independently of which wallet signs.")
     nodes = [
         (0.42, "AGENT", "Task + budget"),
-        (2.84, "SAFE4 402", "Scaffolded challenge"),
+        (2.84, "SAFE4 402", "Real challenge, guarded proof"),
         (5.26, "SAFE4", "Policy + purpose"),
-        (7.68, "CIRCLE", "Agent Wallet"),
+        (7.68, "EXECUTOR", "Presenter, visitor wallet, or caller"),
         (10.1, "ARC", "USDC settlement"),
     ]
     for index, (x, label, sub) in enumerate(nodes):
@@ -342,22 +342,22 @@ def build_deck() -> Presentation:
         slide,
         6,
         "Observed evidence",
-        "Arcscan: testnet.arcscan.app/tx/0xf9d665…e775d · ERC-4337 verifier: scripts/verify_arc_settlement.py",
+        "Arcscan: testnet.arcscan.app/tx/0xe9cf8148…00db4 · verified live on the judged deployment, demo.safe4.ai",
     )
     add_title(slide, "Observed output", "Real demo. Real reasons. Real chain evidence.")
     add_rect(slide, 0.44, 2.72, 5.92, 2.62, fill=PANEL, stroke=GREEN, width=1.4)
     add_pill(slide, "Allowed", 0.72, 2.98, 1.18, fill=GREEN)
     add_text(slide, "TASK_PURCHASE_MATCH", 0.72, 3.52, 5.1, 0.34, size=18, fill=WHITE, bold=True)
     add_text(slide, "Competitor-pricing research matches the assigned task and allowed category.", 0.72, 3.97, 5.05, 0.58, size=12.5, fill=MUTED)
-    add_text(slide, "CIRCLE TX · RPC-VERIFIED REPLAY", 0.72, 4.78, 5.08, 0.25, size=9.2, fill=GREEN, bold=True)
+    add_text(slide, "VISITOR-SIGNED · RPC-VERIFIED · LIVE ON DEMO.SAFE4.AI", 0.72, 4.78, 5.08, 0.25, size=9.2, fill=GREEN, bold=True)
     add_rect(slide, 6.94, 2.72, 5.92, 2.62, fill=PANEL, stroke=RED, width=1.4)
     add_pill(slide, "Denied", 7.22, 2.98, 1.18, fill=RED, text_fill=BG)
     add_text(slide, "PURCHASE_PURPOSE_MISMATCH", 7.22, 3.52, 5.1, 0.34, size=18, fill=WHITE, bold=True)
     add_text(slide, "Same amount, category, and counterparty. Gift-card purpose does not match the research task.", 7.22, 3.97, 5.0, 0.58, size=12.5, fill=MUTED)
-    add_text(slide, "DEMO ORCHESTRATOR DID NOT INVOKE EXECUTOR", 7.22, 4.78, 5.08, 0.25, size=9.2, fill=RED, bold=True)
+    add_text(slide, "WALLET NEVER PROMPTED TO SIGN ON DENY", 7.22, 4.78, 5.08, 0.25, size=9.2, fill=RED, bold=True)
     add_rect(slide, 0.44, 5.75, 12.42, 0.7, fill=PANEL_2, stroke=LINE)
-    add_text(slide, "RPC-VERIFIED CIRCLE AGENT WALLET TX", 0.67, 5.97, 2.35, 0.2, size=8.1, fill=YELLOW, bold=True)
-    add_text(slide, "0xf9d665cf0eb663e33703826ca599d526718042781860faeec5e7ad089fde775d", 3.06, 5.91, 9.12, 0.28, size=9.2, fill=WHITE, font=MONO)
+    add_text(slide, "RPC-VERIFIED, VISITOR-SIGNED TX", 0.67, 5.97, 2.35, 0.2, size=8.1, fill=YELLOW, bold=True)
+    add_text(slide, "0xe9cf81485fac6f0b2158040acdab7364328809b0820239fce20e214cbc100db4", 3.06, 5.91, 9.12, 0.28, size=9.2, fill=WHITE, font=MONO)
 
     # 07 — Arc / Circle rationale
     slide = deck.slides.add_slide(blank)
@@ -367,10 +367,10 @@ def build_deck() -> Presentation:
         "Stack rationale",
         "Sources: docs.arc.io · developers.circle.com/agent-stack · developers.circle.com/agent-stack/agent-wallets/supported-blockchains",
     )
-    add_title(slide, "Infrastructure choice", "Why Arc, USDC, and Circle")
+    add_title(slide, "Infrastructure choice", "Why Arc, USDC, and pluggable execution")
     add_panel(slide, 0.44, 2.8, 3.75, 3.06, label="Arc", title="Two exact verifier paths", body="Direct ERC-20: token + calldata. Agent Wallet: EntryPoint + successful UserOperation + exact transfer event.", accent=YELLOW)
-    add_panel(slide, 4.79, 2.8, 3.75, 3.06, label="USDC", title="One balance, two precisions", body="Arc native RPC values use 18 decimals; the ERC-20 interface uses 6. Safe4 normalizes the exact 0.01 amount.", accent=GREEN)
-    add_panel(slide, 9.14, 2.8, 3.75, 3.06, label="Circle Agent Stack", title="Agent-native execution", body="An authenticated Agent Wallet settled 0.01 testnet USDC after ALLOW. Safe4 verifies its ERC-4337 receipt.", accent=CYAN)
+    add_panel(slide, 4.79, 2.8, 3.75, 3.06, label="USDC", title="One asset, exact evidence", body="Every settlement — presenter, visitor wallet, or external caller — is RPC-verified to the exact amount and recipient.", accent=GREEN)
+    add_panel(slide, 9.14, 2.8, 3.75, 3.06, label="Execution", title="Presenter, visitor, or caller", body="Safe4 decides first. Execution is pluggable: a demo hot wallet, a visitor's own EIP-1193 wallet, or a caller's own settlement via the x402 SDK.", accent=CYAN)
 
     # 08 — Differentiation
     slide = deck.slides.add_slide(blank)
@@ -408,11 +408,11 @@ def build_deck() -> Presentation:
 
     # 10 — Progress / roadmap
     slide = deck.slides.add_slide(blank)
-    add_base(slide, 10, "Progress + accelerator path", "Public repo: github.com/Safe4AI/safe4-arc-demo · evidence current at 5 Aug 2026")
+    add_base(slide, 10, "Progress + accelerator path", "Public repo: github.com/Safe4AI/safe4-arc-demo · evidence current at 10 Aug 2026")
     add_title(slide, "Roadmap", "From verified demo to agent-commerce service")
-    add_panel(slide, 0.44, 2.75, 3.75, 2.85, label="Now / Verified", title="Hackathon proof", body="Python 3.13 regression gate. 5 August Circle Agent Wallet settlement on Arc. Unattended allow/deny demo. Public repository.", accent=GREEN)
+    add_panel(slide, 0.44, 2.75, 3.75, 2.85, label="Now / Verified", title="Hackathon proof", body="542-test regression gate. Live wallet and presenter settlements on Arc. Published SDK verified ALLOW/DENY from a clean clone.", accent=GREEN)
     add_panel(slide, 4.79, 2.75, 3.75, 2.85, label="Next / Harden", title="Trusted context", body="Bind tasks to principals, remove legacy bypasses, harden the x402 verifier boundary, and complete security review.", accent=YELLOW)
-    add_panel(slide, 9.14, 2.75, 3.75, 2.85, label="After / Distribute", title="Agent service", body="Package Safe4 as an x402 service, complete security review, and apply for Circle Agent Marketplace listing.", accent=CYAN)
+    add_panel(slide, 9.14, 2.75, 3.75, 2.85, label="After / Distribute", title="Agent service", body="Self-service provider onboarding for the x402 SDK, complete security review, and apply for Circle Agent Marketplace listing.", accent=CYAN)
     add_text(slide, "THE ACCELERATOR UNLOCKS", 0.47, 6.02, 2.3, 0.25, size=9, fill=YELLOW, bold=True)
     add_text(slide, "design partners · hardened integrations · marketplace readiness", 2.82, 5.95, 9.55, 0.34, size=15, fill=WHITE, bold=True)
 

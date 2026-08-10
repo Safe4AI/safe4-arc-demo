@@ -259,6 +259,7 @@ X402_DEMO_HTML = r"""<!DOCTYPE html>
     details { margin-top: 12px; padding: 10px 12px; background: #0a0b07; border: 1px solid var(--line-soft); }
     summary { color: var(--signal); cursor: pointer; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
     .boundary { margin: 9px 0 0; color: var(--muted); font-size: 10px; }
+    .boundary a { color: var(--signal); text-underline-offset: 2px; }
 
     .evidence-lane {
       display: grid;
@@ -483,6 +484,7 @@ python examples/safe4_quickstart.py \
   --task "Research competitor pricing using a paid company data service." \
   --purpose "Generate a competitor pricing research brief from company data."</code></pre>
         <p class="boundary">Change only <code>--purpose</code> and run it again. The amount, service category and counterparty are identical; the decision is not. Exit code is <code>0</code> on allow and <code>2</code> on deny, so it drops straight into a pipeline.</p>
+        <p class="boundary">That script is a minimal example. For a reusable client, see <a href="https://github.com/Safe4AI/safe4-arc-demo/blob/main/sdk/python/safe4_client.py" target="_blank" rel="noreferrer noopener">sdk/python/safe4_client.py</a> — a small, dependency-light <code>Safe4Client</code> promoted from this same script — and <a href="https://github.com/Safe4AI/safe4-arc-demo/blob/main/docs/x402/CONTRACT.md" target="_blank" rel="noreferrer noopener">docs/x402/CONTRACT.md</a> for the full challenge/proof/decision contract, including every reason code, generated from source. A worked example of a third-party agent using it is at <a href="https://github.com/Safe4AI/safe4-arc-demo/blob/main/examples/third_party_agent_demo.py" target="_blank" rel="noreferrer noopener">examples/third_party_agent_demo.py</a>.</p>
       </details>
     </section>
   </main>
